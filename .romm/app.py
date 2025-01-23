@@ -22,7 +22,10 @@ skip_input_check = False
 
 def start():
     global current_window, romm_provider, platforms, valid_host, valid_credentials
-    current_window = "platform"
+    current_window = "platforms"
+    load_platforms_menu()
+    gr.draw_log("Fetching platforms...", fill=gr.colorViolet, outline=gr.colorViolet)
+    gr.draw_paint()
     platforms, valid_host, valid_credentials = romm_provider.get_platforms()
     load_platforms_menu()
 
@@ -65,7 +68,7 @@ def load_platforms_menu():
                     selected_position -= 1
         elif input.key("A"):
             current_window = "roms"
-            gr.draw_log("Fetching ROMs...", fill=gr.colorViolet, outline=gr.colorViolet)
+            gr.draw_log("Fetching roms...", fill=gr.colorViolet, outline=gr.colorViolet)
             gr.draw_paint()
             skip_input_check = True
             platform_id = platforms[selected_position][1]
