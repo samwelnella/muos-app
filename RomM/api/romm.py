@@ -28,8 +28,9 @@ class RomM:
             "utf-8"
         )
         self.__headers = {"Authorization": f"Basic {self.__auth_token}"}
-        self.__console_list = []
-        self.__roms_list = []
+        self.__platforms = []
+        self.__filtered_platforms = os.getenv("PLATFORMS", None)
+        self.__roms = []
 
     @staticmethod
     def __human_readable_size(size_bytes):
@@ -58,17 +59,19 @@ class RomM:
         except URLError:
             return ([], False, False)
         platforms = json.loads(response.read().decode("utf-8"))
-        self.__console_list = []
+        self.__platforms = []
         for platform in platforms:
             if platform["rom_count"] > 0:
-                self.__console_list.append(
+                if self.__filtered_platforms and platform["slug"] not in self.__filtered_platforms:
+                    continue
+                self.__platforms.append(
                     (platform["display_name"], platform["id"], platform["rom_count"])
                 )
-        return (self.__console_list, True, True)
+        return (self.__platforms, True, True)
 
     def get_roms(self, platform_id, refresh=False):
-        if len(self.__roms_list) > 0 and not refresh:
-            return (self.__roms_list, True, True)
+        if len(self.__roms) > 0 and not refresh:
+            return (self.__roms, True, True)
 
         try:
             request = Request(
@@ -87,7 +90,7 @@ class RomM:
         except URLError:
             return ([], False, False)
         roms = json.loads(response.read().decode("utf-8"))
-        self.__roms_list = [
+        self.__roms = [
             (
                 rom["name"],
                 rom["file_name"],
@@ -98,10 +101,10 @@ class RomM:
             )
             for rom in roms
         ]
-        return self.__roms_list, True, True
+        return self.__roms, True, True
 
     def reset_roms_list(self):
-        self.__roms_list = []
+        self.__roms = []
 
     def download_rom(self, rom):
         url = f"{self.host}{self.__roms_endpoint}/{rom[4]}/content/{quote(rom[1])}"
