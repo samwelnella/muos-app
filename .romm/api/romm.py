@@ -8,11 +8,9 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from dotenv import load_dotenv
-from filesystem.filesystem import Filesystem
 
 # Load .env file from one folder above
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
-fs = Filesystem()
 
 
 class RomM:
@@ -118,16 +116,15 @@ class RomM:
     def reset_roms_list(self):
         self.__roms = []
 
-    def download_rom(self, rom):
+    def download_rom(self, rom, dest_path):
         url = f"{self.host}{self.__roms_endpoint}/{rom[4]}/content/{quote(rom[1])}"
-        dest_path = os.path.join(fs.get_sd_storage_platform_path(rom[2]), rom[1])
         makedirs(os.path.dirname(dest_path), exist_ok=True)
 
         # Create a request with headers
         try:
             request = Request(url, headers=self.__headers)
         except ValueError:
-            return (dest_path, False, False)
+            return (False, False)
 
         # Download the file to a temporary path
         try:
@@ -135,10 +132,10 @@ class RomM:
                 out_file.write(response.read())
         except HTTPError as e:
             if e.code == 403:
-                return (dest_path, True, False)
+                return (True, False)
             else:
                 raise
         except URLError:
-            return (dest_path, False, False)
+            return (False, False)
 
-        return dest_path, True, True
+        return (True, True)

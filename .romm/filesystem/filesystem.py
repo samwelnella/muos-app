@@ -12,7 +12,7 @@ class Filesystem:
         return self.__sd1_rom_storage_path
 
     def get_sd2_storage_path(self):
-        return self.__sd1_rom_storage_path
+        return self.__sd2_rom_storage_path
 
     def get_sd1_storage_platform_path(self, platform):
         return os.path.join(self.__sd1_rom_storage_path, platform)
