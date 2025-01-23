@@ -112,7 +112,7 @@ class RomM:
         try:
             request = Request(url, headers=self.__headers)
         except ValueError:
-            return ([], False, False)
+            return (dest_path, False, False)
 
         # Download the file to a temporary path
         try:
@@ -120,10 +120,10 @@ class RomM:
                 out_file.write(response.read())
         except HTTPError as e:
             if e.code == 403:
-                return ([], True, False)
+                return (dest_path, True, False)
             else:
                 raise
         except URLError:
-            return ([], False, False)
+            return (dest_path, False, False)
 
         return dest_path, True, True
