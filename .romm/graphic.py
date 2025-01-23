@@ -21,9 +21,11 @@ fontFile[13] = ImageFont.truetype(
 fontFile[11] = ImageFont.truetype(
     "/usr/share/fonts/liberation/LiberationMono-Regular.ttf", 11
 )
+colorViolet = "#ad3c6b"
+colorGreen = "#41aa3b"
+colorRed = "#3c3cad"
 colorBlue = "#bb7200"
 colorBlueD1 = "#7f4f00"
-colorViolet = "#dd639c"
 colorGray = "#292929"
 colorGrayL1 = "#383838"
 colorGrayD2 = "#141414"

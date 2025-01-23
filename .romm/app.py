@@ -131,16 +131,16 @@ def load_roms_menu():
             dest_path, valid_host, valid_credentials = romm_provider.download_rom(roms[roms_selected_position])
             if valid_host and valid_credentials:
                 gr.draw_log(
-                    f"Downloaded to\n{dest_path}", fill=gr.colorViolet, outline=gr.colorViolet, lines=2
+                    f"Downloaded to\n{dest_path}", fill=gr.colorGreen, outline=gr.colorGreen, lines=2
                 )
             elif not valid_host:
-                gr.draw_log("Error: Invalid host", fill=gr.colorViolet, outline=gr.colorViolet)
+                gr.draw_log("Error: Invalid host", fill=gr.colorRed, outline=gr.colorRed)
                 valid_host = True
             elif not valid_credentials:
-                gr.draw_log("Error: Permission denied", fill=gr.colorViolet, outline=gr.colorViolet)
+                gr.draw_log("Error: Permission denied", fill=gr.colorRed, outline=gr.colorRed)
                 valid_credentials = True
             else:
-                gr.draw_log("Error: Invalid host or permission denied", fill=gr.colorViolet, outline=gr.colorViolet)
+                gr.draw_log("Error: Invalid host or permission denied", fill=gr.colorRed, outline=gr.colorRed)
             gr.draw_paint()
             time.sleep(2)
             skip_input_check = False
