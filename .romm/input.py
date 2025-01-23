@@ -48,6 +48,64 @@ def key(keyCodeName, keyValue=99):
         return True
 
 
+def handle_navigation(selected_position, max_items, total_items):
+    global value
+
+    if key("DY"):
+        if value == 1:
+            if selected_position == total_items - 1:
+                selected_position = 0
+            elif selected_position < total_items - 1:
+                selected_position += 1
+        elif value == -1:
+            if selected_position == 0:
+                selected_position = total_items - 1
+            elif selected_position > 0:
+                selected_position -= 1
+    elif key("DX"):
+        if value == 1:
+            if selected_position < total_items - 1:
+                if selected_position + max_items <= total_items - 1:
+                    selected_position = selected_position + max_items
+                else:
+                    selected_position = total_items - 1
+        elif value == -1:
+            if selected_position > 0:
+                if selected_position - max_items >= 0:
+                    selected_position = selected_position - max_items
+                else:
+                    selected_position = 0
+    return selected_position
+
+
+def handle_large_navigation(selected_position, max_items, total_items):
+    if key("L1"):
+        if selected_position > 0:
+            if selected_position - max_items >= 0:
+                selected_position = selected_position - max_items
+            else:
+                selected_position = 0
+    elif key("R1"):
+        if selected_position < total_items - 1:
+            if selected_position + max_items <= total_items - 1:
+                selected_position = selected_position + max_items
+            else:
+                selected_position = total_items - 1
+    elif key("L2"):
+        if selected_position > 0:
+            if selected_position - 100 >= 0:
+                selected_position = selected_position - 100
+            else:
+                selected_position = 0
+    elif key("R2"):
+        if selected_position < total_items - 1:
+            if selected_position + 100 <= total_items - 1:
+                selected_position = selected_position + 100
+            else:
+                selected_position = total_items - 1
+    return selected_position
+
+
 def reset_input():
     global codeName, value
     codeName = ""

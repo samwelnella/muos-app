@@ -29,6 +29,7 @@ def start():
     gr.draw_paint()
     platforms, valid_host, valid_credentials = romm_provider.get_platforms()
     load_platforms_menu()
+    return
 
 
 def update():
@@ -51,23 +52,21 @@ def update():
     else:
         load_platforms_menu()
 
+    return
+
 
 def load_platforms_menu():
     global romm_provider, platforms_selected_position, platforms, current_window, skip_input_check, roms, valid_host, valid_credentials
 
     if valid_host and valid_credentials:
-        if input.key("DY"):
-            if input.value == 1:
-                if platforms_selected_position == len(platforms) - 1:
-                    platforms_selected_position = 0
-                elif platforms_selected_position < len(platforms) - 1:
-                    platforms_selected_position += 1
-            elif input.value == -1:
-                if platforms_selected_position == 0:
-                    platforms_selected_position = len(platforms) - 1
-                elif platforms_selected_position > 0:
-                    platforms_selected_position -= 1
-        elif input.key("A"):
+        platforms_selected_position = input.handle_navigation(
+            platforms_selected_position, max_n_platforms, len(platforms)
+        )
+        platforms_selected_position = input.handle_large_navigation(
+            platforms_selected_position, max_n_platforms, len(platforms)
+        )
+
+        if input.key("A"):
             current_window = "roms"
             gr.draw_log("Fetching roms...", fill=gr.colorViolet, outline=gr.colorViolet)
             gr.draw_paint()
@@ -84,46 +83,28 @@ def load_platforms_menu():
 
     gr.draw_clear()
 
-    # Header
-    gr.draw_text(
-        (gr.screen_width / 2, 20),
-        f"RomM | Host: {romm_provider.host} | User: {romm_provider.username}",
-        anchor="mm",
-    )
+    gr.draw_header(romm_provider.host, romm_provider.username)
+
     if valid_host:
         if valid_credentials:
-            # Platforms list
-            gr.draw_rectangle_r(
-                [10, 35, 630, 437], 5, fill=gr.colorGrayD2, outline=None
+            gr.draw_platforms_list(
+                platforms_selected_position, max_n_platforms, platforms
             )
-            start_idx = (
-                int(platforms_selected_position / max_n_platforms) * max_n_platforms
-            )
-            end_idx = start_idx + max_n_platforms
-            for i, p in enumerate(platforms[start_idx:end_idx]):
-                row_list(
-                    (
-                        f"{p[0]} ({p[2]})"
-                        if len(p[0]) <= 55
-                        else p[0][:55] + f"... ({p[2]})"
-                    ),
-                    (20, 45 + (i * 35)),
-                    600,
-                    i == (platforms_selected_position % max_n_platforms),
-                )
         else:
             gr.draw_text((25, 55), "Error: Permission denied")
     else:
         gr.draw_text((25, 55), "Error: Invalid host")
 
     if valid_host and valid_credentials:
-        button_circle((30, 460), "A", "Select")
-        button_circle((133, 460), "Y", "Refresh")
-        button_circle((243, 460), "M", "Exit")
+        gr.button_circle((30, 460), "A", "Select")
+        gr.button_circle((133, 460), "Y", "Refresh")
+        gr.button_circle((243, 460), "M", "Exit")
     else:
-        button_circle((30, 460), "M", "Exit")
+        gr.button_circle((30, 460), "M", "Exit")
 
     gr.draw_paint()
+
+    return
 
 
 def load_roms_menu():
@@ -135,6 +116,13 @@ def load_roms_menu():
         return
 
     if valid_host and valid_credentials:
+        roms_selected_position = input.handle_navigation(
+            roms_selected_position, max_n_roms, len(roms)
+        )
+        roms_selected_position = input.handle_large_navigation(
+            roms_selected_position, max_n_roms, len(roms)
+        )
+
         if input.key("A"):
             skip_input_check = True
             gr.draw_log("Downloading...", fill=gr.colorViolet, outline=gr.colorViolet)
@@ -206,93 +194,24 @@ def load_roms_menu():
                 )
             gr.draw_paint()
             time.sleep(1)
-        elif input.key("DY"):
-            if input.value == 1:
-                if roms_selected_position == len(roms) - 1:
-                    roms_selected_position = 0
-                elif roms_selected_position < len(roms) - 1:
-                    roms_selected_position += 1
-            elif input.value == -1:
-                if roms_selected_position == 0:
-                    roms_selected_position = len(roms) - 1
-                elif roms_selected_position > 0:
-                    roms_selected_position -= 1
-        elif input.key("L1"):
-            if roms_selected_position > 0:
-                if roms_selected_position - max_n_roms >= 0:
-                    roms_selected_position = roms_selected_position - max_n_roms
-                else:
-                    roms_selected_position = 0
-        elif input.key("R1"):
-            if roms_selected_position < len(roms) - 1:
-                if roms_selected_position + max_n_roms <= len(roms) - 1:
-                    roms_selected_position = roms_selected_position + max_n_roms
-                else:
-                    roms_selected_position = len(roms) - 1
-        elif input.key("L2"):
-            if roms_selected_position > 0:
-                if roms_selected_position - 100 >= 0:
-                    roms_selected_position = roms_selected_position - 100
-                else:
-                    roms_selected_position = 0
-        elif input.key("R2"):
-            if roms_selected_position < len(roms) - 1:
-                if roms_selected_position + 100 <= len(roms) - 1:
-                    roms_selected_position = roms_selected_position + 100
-                else:
-                    roms_selected_position = len(roms) - 1
 
     gr.draw_clear()
 
-    # Header
-    gr.draw_text(
-        (gr.screen_width / 2, 20),
-        f"RomM | Host: {romm_provider.host} | User: {romm_provider.username}",
-        anchor="mm",
-    )
-    gr.draw_rectangle_r([10, 37, 630, 100], 5, outline=gr.colorGrayD2)
-    gr.draw_text(
-        (gr.screen_width / 2, 55),
-        platforms[platforms_selected_position][0],
-        color=gr.colorViolet,
-        anchor="mm",
-    )
+    gr.draw_header(romm_provider.host, romm_provider.username)
 
-    # ROMs list
-    gr.draw_rectangle_r([10, 70, 630, 437], 0, fill=gr.colorGrayD2, outline=None)
-    start_idx = int(roms_selected_position / max_n_roms) * max_n_roms
-    end_idx = start_idx + max_n_roms
-    for i, r in enumerate(roms[start_idx:end_idx]):
-        row_list(
-            f"{r[0]} [{r[5]}]" if len(r[0]) <= 55 else r[0][:55] + f"... {r[5]}",
-            (20, 80 + (i * 35)),
-            600,
-            i == (roms_selected_position % max_n_roms),
-        )
+    gr.draw_roms_list(
+        roms_selected_position, max_n_roms, roms, platforms, platforms_selected_position
+    )
 
     if valid_host and valid_credentials:
-        button_circle((30, 460), "A", "Download")
-        button_circle((145, 460), "B", "Back")
-        button_circle((225, 460), "Y", "Refresh")
-        button_circle((330, 460), "X", f"SD: {fs.get_sd_storage()}")
-        button_circle((420, 460), "M", "Exit")
+        gr.button_circle((30, 460), "A", "Download")
+        gr.button_circle((145, 460), "B", "Back")
+        gr.button_circle((225, 460), "Y", "Refresh")
+        gr.button_circle((330, 460), "X", f"SD: {fs.get_sd_storage()}")
+        gr.button_circle((420, 460), "M", "Exit")
     else:
-        button_circle((30, 460), "M", "Exit")
+        gr.button_circle((30, 460), "M", "Exit")
+
     gr.draw_paint()
 
     return
-
-
-def row_list(text, pos, width, selected, fill=None):
-    gr.draw_rectangle_r(
-        [pos[0], pos[1], pos[0] + width, pos[1] + 32],
-        5,
-        fill=(gr.colorViolet if selected else gr.colorGrayL1),
-    )
-    gr.draw_text((pos[0] + 10, pos[1] + 10), text)
-
-
-def button_circle(pos, button, text):
-    gr.draw_circle(pos, 15, fill=gr.colorViolet, outline=None)
-    gr.draw_text(pos, button, anchor="mm")
-    gr.draw_text((pos[0] + 20, pos[1]), text, font=13, anchor="lm")
