@@ -91,23 +91,15 @@ def draw_rectangle_r(position, radius, fill=None, outline=None):
     activeDraw.rounded_rectangle(position, radius, fill=fill, outline=outline)
 
 
-def row_list(text, pos, width, selected, fill=None):
+def row_list(text, pos, width, selected, fill=colorViolet):
     global colorViolet, colorGrayL1
 
     draw_rectangle_r(
         [pos[0], pos[1], pos[0] + width, pos[1] + 32],
         5,
-        fill=(colorViolet if selected else colorGrayL1),
+        fill=(fill if selected else colorGrayL1),
     )
     draw_text((pos[0] + 10, pos[1] + 10), text)
-
-
-def button_circle(pos, button, text, color=colorViolet):
-    global colorViolet
-
-    draw_circle(pos, 10, fill=color, outline=None)
-    draw_text(pos, button, anchor="mm")
-    draw_text((pos[0] + 20, pos[1]), text, font=13, anchor="lm")
 
 
 def draw_circle(position, radius, fill=None, outline="white"):
@@ -124,14 +116,27 @@ def draw_circle(position, radius, fill=None, outline="white"):
     )
 
 
+def button_circle(pos, button, text, color=colorViolet):
+    global colorViolet
+
+    draw_circle(pos, 10, fill=color, outline=None)
+    draw_text((pos[0] + 1, pos[1] + 1), button, anchor="mm")
+    draw_text((pos[0] + 20, pos[1]), text, font=13, anchor="lm")
+
+
 def draw_log(text, fill="Black", outline="black", lines=1):
     global screen_width, screen_height
 
-    draw_rectangle_r([5, screen_height-40, screen_width-5, screen_height-5], 5, fill=fill, outline=outline)
+    draw_rectangle_r(
+        [5, screen_height - 40, screen_width - 5, screen_height - 5],
+        5,
+        fill=fill,
+        outline=outline,
+    )
     if lines == 2:
-        draw_text((15, screen_height-39), text)
+        draw_text((15, screen_height - 39), text)
     else:
-        draw_text((15, screen_height-30), text)
+        draw_text((15, screen_height - 30), text)
 
 
 def draw_header(host, username):
@@ -144,33 +149,29 @@ def draw_header(host, username):
     )
 
 
-def draw_platforms_list(platforms_selected_position, max_n_platforms, platforms):
-    draw_rectangle_r(
-        [10, 35, 630, 437], 5, fill=colorGrayD2, outline=None
-    )
-    start_idx = (
-        int(platforms_selected_position / max_n_platforms) * max_n_platforms
-    )
+def draw_platforms_list(platforms_selected_position, max_n_platforms, platforms, fill=colorViolet):
+    draw_rectangle_r([10, 35, 630, 437], 5, fill=colorGrayD2, outline=None)
+    start_idx = int(platforms_selected_position / max_n_platforms) * max_n_platforms
     end_idx = start_idx + max_n_platforms
     for i, p in enumerate(platforms[start_idx:end_idx]):
+        is_selected = i == (platforms_selected_position % max_n_platforms)
         row_list(
-            (
-                f"{p[0]} ({p[2]})"
-                if len(p[0]) <= 55
-                else p[0][:55] + f"... ({p[2]})"
-            ),
+            (f"{p[0]} ({p[2]})" if len(p[0]) <= 55 else p[0][:55] + f"... ({p[2]})"),
             (20, 45 + (i * 35)),
             600,
-            i == (platforms_selected_position % max_n_platforms),
+            is_selected,
+            fill=fill,
         )
 
 
-def draw_roms_list(roms_selected_position, max_n_roms, roms, platforms, platforms_selected_position):
+def draw_roms_list(
+    roms_selected_position, max_n_roms, roms, header_text, header_color
+):
     draw_rectangle_r([10, 37, 630, 100], 5, outline=colorGrayD2)
     draw_text(
         (screen_width / 2, 55),
-        platforms[platforms_selected_position][0],
-        color=colorViolet,
+        header_text,
+        color=header_color,
         anchor="mm",
     )
 
@@ -178,12 +179,15 @@ def draw_roms_list(roms_selected_position, max_n_roms, roms, platforms, platform
     start_idx = int(roms_selected_position / max_n_roms) * max_n_roms
     end_idx = start_idx + max_n_roms
     for i, r in enumerate(roms[start_idx:end_idx]):
+        is_selected = i == (roms_selected_position % max_n_roms)
         row_list(
             f"{r[0]} [{r[5]}]" if len(r[0]) <= 50 else r[0][:50] + f"... [{r[5]}]",
             (20, 80 + (i * 35)),
             600,
-            i == (roms_selected_position % max_n_roms),
+            is_selected,
+            fill=header_color,
         )
+
 
 draw_start()
 screen_reset()

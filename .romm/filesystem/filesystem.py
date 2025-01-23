@@ -6,6 +6,8 @@ class Filesystem:
     def __init__(self):
         self.__sd1_rom_storage_path = "/mnt/mmc/roms"
         self.__sd2_rom_storage_path = "/mnt/sdcard/roms"
+        if not os.path.exists(self.__sd2_rom_storage_path):
+            os.makedirs(self.__sd2_rom_storage_path)
         self.__current_sd = 2 if os.path.exists(self.__sd2_rom_storage_path) else 1
 
     def get_sd1_storage_path(self):
