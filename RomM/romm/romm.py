@@ -3,6 +3,7 @@ import json
 import math
 import os
 from os import makedirs
+from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -40,10 +41,21 @@ class RomM:
         return f"{s} {size_name[i]}"
 
     def get_platforms(self):
-        request = Request(
-            f"{self.host}{self.__platforms_endpoint}", headers=self.__headers
-        )
-        response = urlopen(request)
+        try:
+            request = Request(
+                f"{self.host}{self.__platforms_endpoint}", headers=self.__headers
+            )
+        except ValueError:
+            return ([], False, False)
+        try:
+            response = urlopen(request)
+        except HTTPError as e:
+            if e.code == 403:
+                return ([], True, False)
+            else:
+                raise
+        except URLError:
+            return ([], False, False)
         platforms = json.loads(response.read().decode("utf-8"))
         self.__console_list = []
         for platform in platforms:
@@ -51,32 +63,41 @@ class RomM:
                 self.__console_list.append(
                     (platform["display_name"], platform["id"], platform["rom_count"])
                 )
-        return self.__console_list
+        return (self.__console_list, True, True)
 
     def get_roms(self, platform_id, refresh=False):
         if len(self.__roms_list) > 0 and not refresh:
-            return self.__roms_list
+            return (self.__roms_list, True, True)
+
         try:
             request = Request(
                 f"{self.host}{self.__roms_endpoint}?platform_id={platform_id}&order_by=name&order_dir=asc",
                 headers=self.__headers,
             )
+        except ValueError:
+            return ([], False, False)
+        try:
             response = urlopen(request)
-            roms = json.loads(response.read().decode("utf-8"))
-            self.__roms_list = [
-                (
-                    rom["name"],
-                    rom["file_name"],
-                    rom["platform_slug"],
-                    rom["file_extension"],
-                    rom["id"],
-                    rom["file_size_bytes"],
-                )
-                for rom in roms
-            ]
-            return self.__roms_list
-        except:
-            return []
+        except HTTPError as e:
+            if e.code == 403:
+                return ([], True, False)
+            else:
+                raise
+        except URLError:
+            return ([], False, False)
+        roms = json.loads(response.read().decode("utf-8"))
+        self.__roms_list = [
+            (
+                rom["name"],
+                rom["file_name"],
+                rom["platform_slug"],
+                rom["file_extension"],
+                rom["id"],
+                rom["file_size_bytes"],
+            )
+            for rom in roms
+        ]
+        return self.__roms_list, True, True
 
     def reset_roms_list(self):
         self.__roms_list = []
@@ -87,10 +108,21 @@ class RomM:
         makedirs(os.path.dirname(dest_path), exist_ok=True)
 
         # Create a request with headers
-        request = Request(url, headers=self.__headers)
+        try:
+            request = Request(url, headers=self.__headers)
+        except ValueError:
+            return ([], False, False)
 
         # Download the file to a temporary path
-        with urlopen(request) as response, open(dest_path, "wb") as out_file:
-            out_file.write(response.read())
+        try:
+            with urlopen(request) as response, open(dest_path, "wb") as out_file:
+                out_file.write(response.read())
+        except HTTPError as e:
+            if e.code == 403:
+                return ([], True, False)
+            else:
+                raise
+        except URLError:
+            return ([], False, False)
 
-        return dest_path
+        return dest_path, True, True
