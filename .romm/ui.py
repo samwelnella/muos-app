@@ -25,8 +25,7 @@ colorViolet = "#ad3c6b"
 colorGreen = "#41aa3b"
 colorRed = "#3c3cad"
 colorBlue = "#bb7200"
-colorBlueD1 = "#7f4f00"
-colorGray = "#292929"
+colorYellow = "#3b80aa"
 colorGrayL1 = "#383838"
 colorGrayD2 = "#141414"
 
@@ -103,10 +102,10 @@ def row_list(text, pos, width, selected, fill=None):
     draw_text((pos[0] + 10, pos[1] + 10), text)
 
 
-def button_circle(pos, button, text):
+def button_circle(pos, button, text, color=colorViolet):
     global colorViolet
 
-    draw_circle(pos, 15, fill=colorViolet, outline=None)
+    draw_circle(pos, 10, fill=color, outline=None)
     draw_text(pos, button, anchor="mm")
     draw_text((pos[0] + 20, pos[1]), text, font=13, anchor="lm")
 
