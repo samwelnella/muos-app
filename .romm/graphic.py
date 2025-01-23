@@ -109,7 +109,7 @@ def draw_circle(position, radius, fill=None, outline="white"):
 def draw_log(text, fill="Black", outline="black", lines=1):
     draw_rectangle_r([5, screen_height-40, screen_width-5, screen_height-5], 5, fill=fill, outline=outline)
     if lines == 2:
-        draw_text((15, screen_height-40), text)
+        draw_text((15, screen_height-39), text)
     else:
         draw_text((15, screen_height-30), text)
 
