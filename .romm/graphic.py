@@ -180,7 +180,7 @@ def draw_roms_list(roms_selected_position, max_n_roms, roms, platforms, platform
     end_idx = start_idx + max_n_roms
     for i, r in enumerate(roms[start_idx:end_idx]):
         row_list(
-            f"{r[0]} [{r[5]}]" if len(r[0]) <= 55 else r[0][:55] + f"... {r[5]}",
+            f"{r[0]} [{r[5]}]" if len(r[0]) <= 50 else r[0][:50] + f"... [{r[5]}]",
             (20, 80 + (i * 35)),
             600,
             i == (roms_selected_position % max_n_roms),

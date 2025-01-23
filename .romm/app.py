@@ -5,9 +5,9 @@ import os
 import graphic as gr
 import input
 from filesystem.filesystem import Filesystem
-from api.romm import RomM
+from api.api import API
 
-romm_provider = RomM()
+romm_provider = API()
 platforms_selected_position = 0
 roms_selected_position = 0
 valid_host = True

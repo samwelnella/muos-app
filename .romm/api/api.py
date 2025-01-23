@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 
-class RomM:
+class API:
 
     def __init__(self):
         self.host = os.getenv("HOST", None)
