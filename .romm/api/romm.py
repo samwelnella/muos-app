@@ -29,7 +29,8 @@ class RomM:
         )
         self.__headers = {"Authorization": f"Basic {self.__auth_token}"}
         self.__platforms = []
-        self.__filtered_platforms = os.getenv("PLATFORMS", None)
+        self.__include_platforms = os.getenv("INCLUDE_PLATFORMS", None)
+        self.__exclude_platforms = os.getenv("EXCLUDE_PLATFORMS", None)
         self.__roms = []
 
     @staticmethod
@@ -62,11 +63,18 @@ class RomM:
         self.__platforms = []
         for platform in platforms:
             if platform["rom_count"] > 0:
-                if self.__filtered_platforms and platform["slug"] not in self.__filtered_platforms:
-                    continue
-                self.__platforms.append(
-                    (platform["display_name"], platform["id"], platform["rom_count"])
-                )
+                if self.__include_platforms:
+                    if platform["slug"] not in self.__include_platforms:
+                        continue
+                    self.__platforms.append(
+                        (platform["display_name"], platform["id"], platform["rom_count"])
+                    )
+                elif self.__exclude_platforms:
+                    if platform["slug"] in self.__exclude_platforms:
+                        continue
+                    self.__platforms.append(
+                        (platform["display_name"], platform["id"], platform["rom_count"])
+                    )
         return (self.__platforms, True, True)
 
     def get_roms(self, platform_id, refresh=False):
