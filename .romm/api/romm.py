@@ -75,6 +75,10 @@ class RomM:
                     self.__platforms.append(
                         (platform["display_name"], platform["id"], platform["rom_count"])
                     )
+                else:
+                    self.__platforms.append(
+                        (platform["display_name"], platform["id"], platform["rom_count"])
+                    )
         return (self.__platforms, True, True)
 
     def get_roms(self, platform_id, refresh=False):
