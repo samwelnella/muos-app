@@ -9,25 +9,29 @@ from api.api import API
 
 romm_provider = API()
 platforms_selected_position = 0
+collections_selected_position = 0
 roms_selected_position = 0
 valid_host = True
 valid_credentials = True
 platforms = []
+collections = []
 roms = []
 current_window = "platforms"
 max_n_platforms = 11
+max_n_collections = 11
 max_n_roms = 10
 fs = Filesystem()
 skip_input_check = False
 
 
 def start():
-    global current_window, romm_provider, platforms, valid_host, valid_credentials
+    global current_window, romm_provider, platforms, collections, valid_host, valid_credentials
     current_window = "platforms"
     load_platforms_menu()
     gr.draw_log("Fetching platforms...", fill=gr.colorViolet, outline=gr.colorViolet)
     gr.draw_paint()
     platforms, valid_host, valid_credentials = romm_provider.get_platforms()
+    collections, valid_host, valid_credentials = romm_provider.get_collections()
     load_platforms_menu()
     return
 
@@ -47,6 +51,8 @@ def update():
 
     if current_window == "platforms":
         load_platforms_menu()
+    elif current_window == "collections":
+        load_collections_menu()
     elif current_window == "roms":
         load_roms_menu()
     else:
@@ -56,7 +62,7 @@ def update():
 
 
 def load_platforms_menu():
-    global romm_provider, platforms_selected_position, platforms, current_window, skip_input_check, roms, valid_host, valid_credentials
+    global romm_provider, platforms_selected_position, platforms, current_window, skip_input_check, roms, valid_host, valid_credentials, max_n_platforms
 
     if valid_host and valid_credentials:
         platforms_selected_position = input.handle_navigation(
@@ -80,6 +86,10 @@ def load_platforms_menu():
             skip_input_check = True
             platforms, valid_host, valid_credentials = romm_provider.get_platforms()
             skip_input_check = False
+        elif input.key("X"):
+            current_window = "collections"
+            skip_input_check = True
+            return
 
     gr.draw_clear()
 
@@ -98,7 +108,65 @@ def load_platforms_menu():
     if valid_host and valid_credentials:
         gr.button_circle((30, 460), "A", "Select")
         gr.button_circle((133, 460), "Y", "Refresh")
-        gr.button_circle((243, 460), "M", "Exit")
+        gr.button_circle((243, 460), "X", "collections" if current_window == "platforms" else "platforms")
+        gr.button_circle((380, 460), "M", "Exit")
+    else:
+        gr.button_circle((30, 460), "M", "Exit")
+
+    gr.draw_paint()
+
+    return
+
+
+def load_collections_menu():
+    global romm_provider, collections_selected_position, collections, current_window, skip_input_check, roms, valid_host, valid_credentials, max_n_collections
+
+    if valid_host and valid_credentials:
+        collections_selected_position = input.handle_navigation(
+            collections_selected_position, max_n_collections, len(collections)
+        )
+        collections_selected_position = input.handle_large_navigation(
+            collections_selected_position, max_n_collections, len(collections)
+        )
+
+        if input.key("A"):
+            # current_window = "roms"
+            # gr.draw_log("Fetching roms...", fill=gr.colorViolet, outline=gr.colorViolet)
+            # gr.draw_paint()
+            # skip_input_check = True
+            # platform_id = platforms[platforms_selected_position][1]
+            # roms, valid_host, valid_credentials = romm_provider.get_roms(platform_id)
+            return
+        elif input.key("Y"):
+            gr.draw_log("Refreshing...", fill=gr.colorViolet, outline=gr.colorViolet)
+            gr.draw_paint()
+            skip_input_check = True
+            collections, valid_host, valid_credentials = romm_provider.get_collections()
+            skip_input_check = False
+        elif input.key("X"):
+            current_window = "platforms"
+            skip_input_check = True
+            return
+
+    gr.draw_clear()
+
+    gr.draw_header(romm_provider.host, romm_provider.username)
+
+    if valid_host:
+        if valid_credentials:
+            gr.draw_platforms_list(
+                collections_selected_position, max_n_collections, collections
+            )
+        else:
+            gr.draw_text((25, 55), "Error: Permission denied")
+    else:
+        gr.draw_text((25, 55), "Error: Invalid host")
+
+    if valid_host and valid_credentials:
+        gr.button_circle((30, 460), "A", "Select")
+        gr.button_circle((133, 460), "Y", "Refresh")
+        gr.button_circle((243, 460), "X", "collections" if current_window == "platforms" else "platforms")
+        gr.button_circle((380, 460), "M", "Exit")
     else:
         gr.button_circle((30, 460), "M", "Exit")
 

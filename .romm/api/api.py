@@ -18,6 +18,7 @@ class API:
     def __init__(self):
         self.host = os.getenv("HOST", None)
         self.__platforms_endpoint = "/api/platforms"
+        self.__collections_endpoint = "/api/collections"
         self.__roms_endpoint = "/api/roms"
         self.username = os.getenv("USERNAME", None)
         self.__password = os.getenv("PASSWORD", None)
@@ -29,6 +30,9 @@ class API:
         self.__platforms = []
         self.__include_platforms = os.getenv("INCLUDE_PLATFORMS", None)
         self.__exclude_platforms = os.getenv("EXCLUDE_PLATFORMS", None)
+        self.__collections = []
+        self.__include_collections = os.getenv("INCLUDE_COLLECTIONS", None)
+        self.__exclude_collections = os.getenv("EXCLUDE_COLLECTIONS", None)
         self.__roms = []
 
     @staticmethod
@@ -65,19 +69,69 @@ class API:
                     if platform["slug"] not in self.__include_platforms:
                         continue
                     self.__platforms.append(
-                        (platform["display_name"], platform["id"], platform["rom_count"])
+                        (
+                            platform["display_name"],
+                            platform["id"],
+                            platform["rom_count"],
+                        )
                     )
                 elif self.__exclude_platforms:
                     if platform["slug"] in self.__exclude_platforms:
                         continue
                     self.__platforms.append(
-                        (platform["display_name"], platform["id"], platform["rom_count"])
+                        (
+                            platform["display_name"],
+                            platform["id"],
+                            platform["rom_count"],
+                        )
                     )
                 else:
                     self.__platforms.append(
-                        (platform["display_name"], platform["id"], platform["rom_count"])
+                        (
+                            platform["display_name"],
+                            platform["id"],
+                            platform["rom_count"],
+                        )
                     )
         return (self.__platforms, True, True)
+
+    def get_collections(self):
+        try:
+            request = Request(
+                f"{self.host}{self.__collections_endpoint}", headers=self.__headers
+            )
+        except ValueError:
+            return ([], False, False)
+        try:
+            response = urlopen(request)
+        except HTTPError as e:
+            if e.code == 403:
+                return ([], True, False)
+            else:
+                raise
+        except URLError:
+            return ([], False, False)
+        collections = json.loads(response.read().decode("utf-8"))
+        self.__collections = []
+        for collection in collections:
+            if collection["rom_count"] > 0:
+                if self.__include_collections:
+                    if collection["name"] not in self.__include_collections:
+                        continue
+                    self.__collections.append(
+                        (collection["name"], collection["id"], collection["rom_count"])
+                    )
+                elif self.__exclude_collections:
+                    if collection["name"] in self.__exclude_collections:
+                        continue
+                    self.__collections.append(
+                        (collection["name"], collection["id"], collection["rom_count"])
+                    )
+                else:
+                    self.__collections.append(
+                        (collection["name"], collection["id"], collection["rom_count"])
+                    )
+        return (self.__collections, True, True)
 
     def get_roms(self, platform_id, refresh=False):
         if len(self.__roms) > 0 and not refresh:
