@@ -4,7 +4,7 @@ import time
 import graphic as gr
 import input
 from filesystem.filesystem import Filesystem
-from romm.romm import RomM
+from api.romm import RomM
 
 romm_provider = RomM()
 selected_position = 0
@@ -82,18 +82,18 @@ def load_platforms_menu():
 
     # Header
     gr.draw_text(
-        (15, 10), f"RomM | Host: {romm_provider.host} | User: {romm_provider.username}"
+        (gr.screen_width/2, 20), f"RomM | Host: {romm_provider.host} | User: {romm_provider.username}", anchor="mm"
     )
     if valid_host:
         if valid_credentials:
             # Platforms list
-            gr.draw_rectangle_r([10, 40, 630, 440], 15, fill=gr.colorGrayD2, outline=None)
+            gr.draw_rectangle_r([10, 35, 630, 437], 15, fill=gr.colorGrayD2, outline=None)
             start_idx = int(selected_position / max_n_platforms) * max_n_platforms
             end_idx = start_idx + max_n_platforms
             for i, p in enumerate(platforms[start_idx:end_idx]):
                 row_list(
                     f"{p[0]} ({p[2]})" if len(p[0]) <= 55 else p[0][:55] + f"... ({p[2]})",
-                    (20, 50 + (i * 35)),
+                    (20, 45 + (i * 35)),
                     600,
                     i == (selected_position % max_n_platforms),
                 )
@@ -127,10 +127,10 @@ def load_roms_menu():
             gr.draw_paint()
             dest_path, valid_host, valid_credentials = romm_provider.download_rom(roms[roms_selected_position])
             gr.draw_log(
-                f"Downloaded to\n{dest_path}", fill=gr.colorViolet, outline=gr.colorViolet
+                f"Downloaded to\n{dest_path}", fill=gr.colorViolet, outline=gr.colorViolet, lines=2
             )
             gr.draw_paint()
-            time.sleep(3)
+            time.sleep(2)
             skip_input_check = False
         elif input.key("B"):
             current_window = "platforms"
@@ -138,8 +138,6 @@ def load_roms_menu():
             romm_provider.reset_roms_list()
             roms_selected_position = 0
             skip_input_check = True
-            platforms, valid_host, valid_credentials = romm_provider.get_platforms()
-            skip_input_check = False
             return
         elif input.key("Y"):
             gr.draw_log("Refreshing...", fill=gr.colorViolet, outline=gr.colorViolet)
@@ -189,20 +187,20 @@ def load_roms_menu():
     gr.draw_clear()
 
     # Header
-    platform_name = platforms[selected_position][0]
     gr.draw_text(
-        (15, 10), f"RomM | Host: {romm_provider.host} | User: {romm_provider.username}"
+        (gr.screen_width/2, 20), f"RomM | Host: {romm_provider.host} | User: {romm_provider.username}", anchor="mm"
     )
-    gr.draw_text((15, 35), f" - {platform_name} - ", color=gr.colorViolet)
+    gr.draw_rectangle_r([10, 37, 630, 100], 15, outline=gr.colorViolet)
+    gr.draw_text((gr.screen_width/2, 55), platforms[selected_position][0], color=gr.colorViolet, anchor="mm")
 
     # ROMs list
-    gr.draw_rectangle_r([10, 60, 630, 430], 15, fill=gr.colorGrayD2, outline=None)
+    gr.draw_rectangle_r([10, 70, 630, 437], 15, fill=gr.colorGrayD2, outline=None)
     start_idx = int(roms_selected_position / max_n_roms) * max_n_roms
     end_idx = start_idx + max_n_roms
     for i, r in enumerate(roms[start_idx:end_idx]):
         row_list(
-            r[0] if len(r[0]) <= 55 else r[0][:55] + f"... {r[5]}",
-            (20, 70 + (i * 35)),
+            f"{r[0]} [{r[5]}]" if len(r[0]) <= 55 else r[0][:55] + f"... {r[5]}",
+            (20, 80 + (i * 35)),
             600,
             i == (roms_selected_position % max_n_roms),
         )

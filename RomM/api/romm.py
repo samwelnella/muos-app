@@ -31,6 +31,7 @@ class RomM:
         self.__console_list = []
         self.__roms_list = []
 
+    @staticmethod
     def __human_readable_size(size_bytes):
         if size_bytes == 0:
             return "0B"
@@ -93,7 +94,7 @@ class RomM:
                 rom["platform_slug"],
                 rom["file_extension"],
                 rom["id"],
-                rom["file_size_bytes"],
+                self.__human_readable_size(rom["file_size_bytes"]),
             )
             for rom in roms
         ]
