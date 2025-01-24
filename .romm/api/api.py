@@ -16,23 +16,22 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 class API:
 
     def __init__(self):
-        self.host = os.getenv("HOST", None)
+        self.host = os.getenv("HOST", "")
         self.__platforms_endpoint = "/api/platforms"
         self.__collections_endpoint = "/api/collections"
         self.__roms_endpoint = "/api/roms"
-        self.username = os.getenv("USERNAME", None)
-        self.__password = os.getenv("PASSWORD", None)
+        self.username = os.getenv("USERNAME", "")
+        self.__password = os.getenv("PASSWORD", "")
         self.__credentials = f"{self.username}:{self.__password}"
         self.__auth_token = base64.b64encode(self.__credentials.encode("utf-8")).decode(
             "utf-8"
         )
         self.__headers = {"Authorization": f"Basic {self.__auth_token}"}
         self.__platforms = []
-        self.__include_platforms = os.getenv("INCLUDE_PLATFORMS", None)
-        self.__exclude_platforms = os.getenv("EXCLUDE_PLATFORMS", None)
+        self.__exclude_platforms = os.getenv("EXCLUDE_PLATFORMS", [])
         self.__collections = []
-        self.__include_collections = os.getenv("INCLUDE_COLLECTIONS", None)
-        self.__exclude_collections = os.getenv("EXCLUDE_COLLECTIONS", None)
+        self.__include_collections = os.getenv("INCLUDE_COLLECTIONS", [])
+        self.__exclude_collections = os.getenv("EXCLUDE_COLLECTIONS", [])
         self.__roms = []
 
     @staticmethod
@@ -53,7 +52,9 @@ class API:
         except ValueError:
             return ([], False, False)
         try:
-            response = urlopen(request)
+            if request.type not in ("http", "https"):
+                return ([], False, False)
+            response = urlopen(request, timeout=60) # trunk-ignore(bandit/B310)
         except HTTPError as e:
             if e.code == 403:
                 return ([], True, False)
@@ -65,34 +66,18 @@ class API:
         self.__platforms = []
         for platform in platforms:
             if platform["rom_count"] > 0:
-                if self.__include_platforms:
-                    if platform["slug"] not in self.__include_platforms:
-                        continue
-                    self.__platforms.append(
-                        (
-                            platform["display_name"],
-                            platform["id"],
-                            platform["rom_count"],
-                        )
+                if (
+                    platform["slug"] not in MUOS_SUPPORTED_PLATFORMS
+                    or platform["slug"] in self.__exclude_platforms
+                ):
+                    continue
+                self.__platforms.append(
+                    (
+                        platform["display_name"],
+                        platform["id"],
+                        platform["rom_count"],
                     )
-                elif self.__exclude_platforms:
-                    if platform["slug"] in self.__exclude_platforms:
-                        continue
-                    self.__platforms.append(
-                        (
-                            platform["display_name"],
-                            platform["id"],
-                            platform["rom_count"],
-                        )
-                    )
-                else:
-                    self.__platforms.append(
-                        (
-                            platform["display_name"],
-                            platform["id"],
-                            platform["rom_count"],
-                        )
-                    )
+                )
         return (self.__platforms, True, True)
 
     def get_collections(self):
@@ -103,7 +88,9 @@ class API:
         except ValueError:
             return ([], False, False)
         try:
-            response = urlopen(request)
+            if request.type not in ("http", "https"):
+                return ([], False, False)
+            response = urlopen(request) # trunk-ignore(bandit/B310)
         except HTTPError as e:
             if e.code == 403:
                 return ([], True, False)
@@ -145,7 +132,9 @@ class API:
         except ValueError:
             return ([], False, False)
         try:
-            response = urlopen(request)
+            if request.type not in ("http", "https"):
+                return ([], False, False)
+            response = urlopen(request) # trunk-ignore(bandit/B310)
         except HTTPError as e:
             if e.code == 403:
                 return ([], True, False)
@@ -163,7 +152,7 @@ class API:
                 rom["id"],
                 self.__human_readable_size(rom["file_size_bytes"]),
             )
-            for rom in roms
+            for rom in roms if rom["platform_slug"] in MUOS_SUPPORTED_PLATFORMS
         ]
         return self.__roms, True, True
 
@@ -182,7 +171,9 @@ class API:
 
         # Download the file to a temporary path
         try:
-            with urlopen(request) as response, open(dest_path, "wb") as out_file:
+            if request.type not in ("http", "https"):
+                return ([], False, False)
+            with urlopen(request) as response, open(dest_path, "wb") as out_file: # trunk-ignore(bandit/B310)
                 out_file.write(response.read())
         except HTTPError as e:
             if e.code == 403:
@@ -193,3 +184,92 @@ class API:
             return (False, False)
 
         return (True, True)
+
+
+MUOS_SUPPORTED_PLATFORMS = [
+    "acpc",
+    "arcade",
+    "arduboy",
+    "atari2600",
+    "atari5200",
+    "atari7800",
+    "jaguar",
+    "lynx",
+    "atari-st",
+    "wonderswan",
+    "wonderswan-color",
+    "cave-story",
+    "chailove",
+    "chip-8",
+    "colecovision",
+    "amiga",
+    "c128",
+    "c64",
+    "cpet",
+    "vic-20",
+    "dos",
+    "doom",
+    "fairchild-channel-f",
+    "vectrex",
+    "galaksija",
+    "g-and-w",
+    "j2me",
+    "lowres",
+    "lua",
+    "odyssey--1",
+    "intellivision",
+    "mega-duck-slash-cougar-boy",
+    "msx",
+    "turbografx-16-slash-pc-engine-cd",
+    "supergrafx",
+    "turbografx16--1",
+    "pc-8000",
+    "pc-fx",
+    "pc-9800-series",
+    "nds",
+    "fds",
+    "gba",
+    "gbc",
+    "gb",
+    "n64",
+    "nes",
+    "famicom",
+    "snes",
+    "sfam",
+    "pokemon-mini",
+    "virtualboy",
+    "openbor",
+    "pico-8",
+    "philips-cd-i",
+    "quake",
+    "rpg-maker",
+    "neogeoaes",
+    "neogeomvs",
+    "neo-geo-cd",
+    "neo-geo-pocket",
+    "neo-geo-pocket-color",
+    "scummvm",
+    "sega-32x",
+    "dc",
+    "gamegear",
+    "sega-master-system",
+    "genesis-slash-megadrive",
+    "sega-pico",
+    "segacd",
+    "sg1000",
+    "saturn",
+    "x1",
+    "sharp-x68000",
+    "sinclair-zx81",
+    "zxs",
+    "ps",
+    "psp",
+    "tic-80",
+    "ti-83",
+    "3do",
+    "uzebox",
+    "vemulator",
+    "wasm-4",
+    "watara-slash-quickshot-supervision",
+    "wolfenstein-3d",
+]
