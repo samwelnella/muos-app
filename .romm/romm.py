@@ -72,9 +72,9 @@ class RomM:
                         else self.previows_view
                     ),
                     (
-                        self.platforms[self.platforms_selected_position][1]
+                        self.platforms[self.platforms_selected_position].id
                         if self.current_view == View.PLATFORMS.value
-                        else self.collections[self.collections_selected_position][1]
+                        else self.collections[self.collections_selected_position].id
                     ),
                 )
             )
@@ -83,9 +83,9 @@ class RomM:
                 self.romm_provider.get_roms(
                     self.previows_view,
                     (
-                        self.platforms[self.platforms_selected_position][1]
+                        self.platforms[self.platforms_selected_position].id
                         if self.previows_view == View.PLATFORMS.value
-                        else self.collections[self.collections_selected_position][1]
+                        else self.collections[self.collections_selected_position].id
                     ),
                 )
             )
@@ -148,7 +148,7 @@ class RomM:
             )
 
     def _render_collections_view(self):
-        ui.draw_platforms_list(
+        ui.draw_collections_list(
             self.collections_selected_position,
             self.max_n_collections,
             self.collections,
@@ -197,9 +197,9 @@ class RomM:
 
     def _render_roms_view(self):
         header_text = (
-            self.platforms[self.platforms_selected_position][0]
+            self.platforms[self.platforms_selected_position].display_name
             if self.previows_view == View.PLATFORMS.value
-            else self.collections[self.collections_selected_position][0]
+            else self.collections[self.collections_selected_position].name
         )
         header_color = (
             ui.colorViolet
@@ -232,10 +232,10 @@ class RomM:
                 self.multi_selected_roms.append(self.roms[self.roms_selected_position])
 
             for rom in self.multi_selected_roms:
-                ui.draw_log(f"Downloading {rom[0]} ({rom[1]})")
+                ui.draw_log(f"Downloading {rom.name} ({rom.file_name})")
                 dest_path = os.path.join(
-                    self.fs.get_sd_storage_platform_path(rom[2]),
-                    rom[1],
+                    self.fs.get_sd_storage_platform_path(rom.platform_slug),
+                    rom.file_name,
                 )
 
                 self.valid_host, self.valid_credentials = (
@@ -282,7 +282,7 @@ class RomM:
                 )
             else:
                 ui.draw_log(
-                    f"Set download path to SD {self.fs.get_sd_storage()}: {self.fs.get_sd_storage_platform_path(self.roms[self.roms_selected_position][2])}",
+                    f"Set download path to SD {self.fs.get_sd_storage()}: {self.fs.get_sd_storage_platform_path(self.roms[self.roms_selected_position].platform_slug)}",
                     text_color=ui.colorGreen,
                 )
             time.sleep(2)

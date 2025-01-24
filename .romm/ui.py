@@ -177,7 +177,33 @@ def draw_platforms_list(
     for i, p in enumerate(platforms[start_idx:end_idx]):
         is_selected = i == (platforms_selected_position % max_n_platforms)
         row_list(
-            (f"{p[0]} ({p[2]})" if len(p[0]) <= 55 else p[0][:55] + f"... ({p[2]})"),
+            (
+                f"{p.display_name} ({p.rom_count})"
+                if len(p.display_name) <= 55
+                else p.display_name[:55] + f"... ({p.rom_count})"
+            ),
+            (20, 45 + (i * 35)),
+            600,
+            32,
+            is_selected,
+            fill=fill,
+        )
+
+
+def draw_collections_list(
+    collections_selected_position, max_n_collections, collections, fill=colorViolet
+):
+    draw_rectangle_r([10, 35, 630, 437], 5, fill=colorGrayD2, outline=None)
+    start_idx = int(collections_selected_position / max_n_collections) * max_n_collections
+    end_idx = start_idx + max_n_collections
+    for i, c in enumerate(collections[start_idx:end_idx]):
+        is_selected = i == (collections_selected_position % max_n_collections)
+        row_list(
+            (
+                f"{c.name} ({c.rom_count})"
+                if len(c.name) <= 55
+                else c.name[:55] + f"... ({c.rom_count})"
+            ),
             (20, 45 + (i * 35)),
             600,
             32,
@@ -211,12 +237,12 @@ def draw_roms_list(
         is_selected = i == (roms_selected_position % max_n_roms)
         text_offset = 2 if r in multi_selected_roms else 0
         row_text = (
-            f"{r[0]} [{r[5]}]"
-            if len(r[0]) <= max_len_text - text_offset
-            else r[0][: max_len_text - text_offset] + f"... [{r[5]}]"
+            f"{r.name} [{r.file_size}]"
+            if len(r.name) <= max_len_text - text_offset
+            else r.name[: max_len_text - text_offset] + f"... [{r.file_size}]"
         )
         if prepend_platform_slug:
-            row_text = f"({r[2]}) " + row_text
+            row_text = f"({r.platform_slug}) " + row_text
         if r in multi_selected_roms:
             row_text = f"* {row_text}"
         row_list(
