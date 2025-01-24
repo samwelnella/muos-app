@@ -135,9 +135,9 @@ def draw_log(text, fill="Black", outline="black", lines=1):
         outline=outline,
     )
     if lines == 2:
-        draw_text((15, screen_height - 39), text)
+        draw_text((15, screen_height - 39), text if len(text) <= 79 else text[:79] + "...")
     else:
-        draw_text((15, screen_height - 30), text)
+        draw_text((15, screen_height - 30), text if len(text) <= 65 else text[:65] + "...")
 
 
 def draw_header(host, username):

@@ -218,7 +218,7 @@ def draw_roms_view():
 
             for rom in multi_selected_roms:
                 skip_input_check = True
-                ui.draw_log(f"Downloading: {rom[0]} ({rom[1]})")
+                ui.draw_log(f"Downloading {rom[0]} ({rom[1]})")
                 ui.draw_paint()
                 dest_path = os.path.join(
                     fs.get_sd_storage_platform_path(rom[2]),
