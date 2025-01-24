@@ -98,7 +98,7 @@ def row_list(text, pos, width, selected, fill=colorViolet, outline=None):
         [pos[0], pos[1], pos[0] + width, pos[1] + 32],
         5,
         fill=(fill if selected else colorGrayL1),
-        outline=outline
+        outline=outline,
     )
     draw_text((pos[0] + 10, pos[1] + 10), text)
 
@@ -189,8 +189,11 @@ def draw_roms_list(
     end_idx = start_idx + max_n_roms
     for i, r in enumerate(roms[start_idx:end_idx]):
         is_selected = i == (roms_selected_position % max_n_roms)
+        text_offset = 2 if r in multi_selected_roms else 0
         row_text = (
-            f"{r[0]} [{r[5]}]" if len(r[0]) <= 50 else r[0][:50] + f"... [{r[5]}]"
+            f"{r[0]} [{r[5]}]"
+            if len(r[0]) <= 50 - text_offset
+            else r[0][: 50 - text_offset] + f"... [{r[5]}]"
         )
         if prepend_platform_slug:
             row_text = f"({r[2]}) " + row_text
@@ -202,7 +205,7 @@ def draw_roms_list(
             600,
             is_selected,
             fill=header_color,
-            outline=header_color if r in multi_selected_roms else None
+            outline=header_color if r in multi_selected_roms else None,
         )
 
 
