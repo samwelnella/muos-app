@@ -11,7 +11,7 @@ LOG_DIR="${ROOT_DIR}/logs"
 mkdir -p "${LOG_DIR}"
 
 # Check if romm.png exists
-if ! -f /opt/muos/default/MUOS/theme/active/glyph/muxapp/romm.png
+if [[ ! -f "/opt/muos/default/MUOS/theme/active/glyph/muxapp/romm.png" ]];
 then
     cp "${ROOT_DIR}/resources/romm.png" "/opt/muos/default/MUOS/theme/active/glyph/muxapp/romm.png"
 fi

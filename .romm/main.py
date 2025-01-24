@@ -1,12 +1,15 @@
-import app
-
+from romm import RomM
+import time
 
 def main():
-    app.start()
+
+    romm = RomM()
+    romm.start()
 
     while True:
-        app.update()
-
+        romm.update()
+        # Add a small sleep to prevent 100% CPU usage
+        time.sleep(0.01)
 
 if __name__ == "__main__":
     main()

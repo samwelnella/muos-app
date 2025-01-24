@@ -65,7 +65,7 @@ def draw_active(image):
     activeDraw = ImageDraw.Draw(activeImage)
 
 
-def draw_paint():
+def draw_update():
     global activeImage
     mm.seek(0)
     mm.write(activeImage.tobytes())
@@ -138,6 +138,7 @@ def draw_log(text, fill="Black", outline="black", lines=1):
         draw_text((15, screen_height - 39), text if len(text) <= 79 else text[:79] + "...")
     else:
         draw_text((15, screen_height - 30), text if len(text) <= 65 else text[:65] + "...")
+    draw_update()
 
 
 def draw_header(host, username):
