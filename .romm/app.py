@@ -271,7 +271,7 @@ def draw_roms_view():
             new = fs.get_sd_storage()
             if new == current:
                 ui.draw_log(
-                    f"Couldn't set SD {fs.get_sd_storage()}",
+                    f"Error: Couldn't find path {fs.get_sd2_storage_path()}",
                 )
             else:
                 ui.draw_log(

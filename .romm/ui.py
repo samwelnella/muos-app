@@ -194,6 +194,8 @@ def draw_roms_list(
         )
         if prepend_platform_slug:
             row_text = f"({r[2]}) " + row_text
+        if r in multi_selected_roms:
+            row_text = f"* {row_text}"
         row_list(
             row_text,
             (20, 80 + (i * 35)),
