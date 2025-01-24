@@ -259,9 +259,13 @@ def draw_roms_view():
             ui.draw_log("Refreshing...")
             ui.draw_paint()
             skip_input_check = True
-            platform_id = platforms[platforms_selected_position][1]
+            bucket_id = (
+                platforms[platforms_selected_position][1]
+                if selected_bucket == "platform"
+                else collections[collections_selected_position][1]
+            )
             roms, valid_host, valid_credentials = romm_provider.get_roms(
-                platform_id, refresh=True
+                selected_bucket, bucket_id, refresh=True
             )
             skip_input_check = False
             multi_selected_roms = []
@@ -297,7 +301,13 @@ def draw_roms_view():
     header_color = ui.colorViolet if selected_bucket == "platform" else ui.colorYellow
 
     ui.draw_roms_list(
-        roms_selected_position, max_n_roms, roms, header_text, header_color, multi_selected_roms, prepend_platform_slug=selected_bucket == "collection"
+        roms_selected_position,
+        max_n_roms,
+        roms,
+        header_text,
+        header_color,
+        multi_selected_roms,
+        prepend_platform_slug=selected_bucket == "collection",
     )
 
     if valid_host and valid_credentials:
