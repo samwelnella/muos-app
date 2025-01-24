@@ -11,6 +11,7 @@ romm_provider = API()
 platforms_selected_position = 0
 collections_selected_position = 0
 roms_selected_position = 0
+multi_selected_roms = []
 valid_host = True
 valid_credentials = True
 platforms = []
@@ -28,12 +29,12 @@ skip_input_check = False
 def start():
     global current_window, romm_provider, platforms, collections, valid_host, valid_credentials
     current_window = "platform"
-    load_platforms_menu()
+    draw_platforms_view()
     ui.draw_log("Fetching platforms...")
     ui.draw_paint()
     platforms, valid_host, valid_credentials = romm_provider.get_platforms()
     collections, valid_host, valid_credentials = romm_provider.get_collections()
-    load_platforms_menu()
+    draw_platforms_view()
     return
 
 
@@ -51,18 +52,18 @@ def update():
         sys.exit()
 
     if current_window == "platform":
-        load_platforms_menu()
+        draw_platforms_view()
     elif current_window == "collection":
-        load_collections_menu()
+        draw_collections_view()
     elif current_window == "roms":
-        load_roms_menu()
+        draw_roms_view()
     else:
-        load_platforms_menu()
+        draw_platforms_view()
 
     return
 
 
-def load_platforms_menu():
+def draw_platforms_view():
     global romm_provider, platforms_selected_position, platforms, current_window, skip_input_check, roms, valid_host, valid_credentials, max_n_platforms, selected_bucket
 
     if valid_host and valid_credentials:
@@ -127,7 +128,7 @@ def load_platforms_menu():
     return
 
 
-def load_collections_menu():
+def draw_collections_view():
     global romm_provider, collections_selected_position, collections, current_window, skip_input_check, roms, valid_host, valid_credentials, max_n_collections, selected_bucket
 
     if valid_host and valid_credentials:
@@ -195,8 +196,8 @@ def load_collections_menu():
     return
 
 
-def load_roms_menu():
-    global romm_provider, platforms_selected_position, platforms, roms, current_window, roms_selected_position, skip_input_check, valid_host, valid_credentials
+def draw_roms_view():
+    global romm_provider, platforms_selected_position, platforms, roms, current_window, roms_selected_position, skip_input_check, valid_host, valid_credentials, multi_selected_roms
 
     if len(roms) < 1:
         current_window = "platform"
@@ -212,40 +213,47 @@ def load_roms_menu():
         )
 
         if input.key("A"):
-            skip_input_check = True
-            ui.draw_log("Downloading...")
-            ui.draw_paint()
-            dest_path = os.path.join(
-                fs.get_sd_storage_platform_path(roms[roms_selected_position][2]),
-                roms[roms_selected_position][1],
-            )
-            valid_host, valid_credentials = romm_provider.download_rom(
-                roms[roms_selected_position], dest_path
-            )
-            if valid_host and valid_credentials:
-                ui.draw_log(
-                    f"Downloaded to\n{dest_path}",
-                    lines=2,
+            if len(multi_selected_roms) == 0:
+                multi_selected_roms.append(roms[roms_selected_position])
+
+            for rom in multi_selected_roms:
+                skip_input_check = True
+                ui.draw_log(f"Downloading: {rom[0]} ({rom[1]})")
+                ui.draw_paint()
+                dest_path = os.path.join(
+                    fs.get_sd_storage_platform_path(rom[2]),
+                    rom[1],
                 )
-            elif not valid_host:
-                ui.draw_log("Error: Invalid host")
-                valid_host = True
-            elif not valid_credentials:
-                ui.draw_log("Error: Permission denied")
-                valid_credentials = True
-            else:
-                ui.draw_log(
-                    "Error: Invalid host or permission denied",
+
+                valid_host, valid_credentials = romm_provider.download_rom(
+                    rom, dest_path
                 )
-            ui.draw_paint()
-            time.sleep(2)
+                if valid_host and valid_credentials:
+                    ui.draw_log(
+                        f"Downloaded to\n{dest_path}",
+                        lines=2,
+                    )
+                elif not valid_host:
+                    ui.draw_log("Error: Invalid host")
+                    valid_host = True
+                elif not valid_credentials:
+                    ui.draw_log("Error: Permission denied")
+                    valid_credentials = True
+                else:
+                    ui.draw_log(
+                        "Error: Invalid host or permission denied",
+                    )
+                ui.draw_paint()
+                time.sleep(2)
             skip_input_check = False
+            multi_selected_roms = []
         elif input.key("B"):
             current_window = selected_bucket
             ui.draw_clear()
             romm_provider.reset_roms_list()
             roms_selected_position = 0
             skip_input_check = True
+            multi_selected_roms = []
             return
         elif input.key("Y"):
             ui.draw_log("Refreshing...")
@@ -256,6 +264,7 @@ def load_roms_menu():
                 platform_id, refresh=True
             )
             skip_input_check = False
+            multi_selected_roms = []
         elif input.key("X"):
             current = fs.get_sd_storage()
             fs.switch_sd_storage()
@@ -270,6 +279,11 @@ def load_roms_menu():
                 )
             ui.draw_paint()
             time.sleep(1)
+        elif input.key("SELECT"):
+            if roms[roms_selected_position] not in multi_selected_roms:
+                multi_selected_roms.append(roms[roms_selected_position])
+            else:
+                multi_selected_roms.remove(roms[roms_selected_position])
 
     ui.draw_clear()
 
@@ -283,7 +297,7 @@ def load_roms_menu():
     header_color = ui.colorViolet if selected_bucket == "platform" else ui.colorYellow
 
     ui.draw_roms_list(
-        roms_selected_position, max_n_roms, roms, header_text, header_color
+        roms_selected_position, max_n_roms, roms, header_text, header_color, multi_selected_roms, prepend_platform_slug=selected_bucket == "collection"
     )
 
     if valid_host and valid_credentials:

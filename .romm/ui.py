@@ -91,13 +91,14 @@ def draw_rectangle_r(position, radius, fill=None, outline=None):
     activeDraw.rounded_rectangle(position, radius, fill=fill, outline=outline)
 
 
-def row_list(text, pos, width, selected, fill=colorViolet):
+def row_list(text, pos, width, selected, fill=colorViolet, outline=None):
     global colorViolet, colorGrayL1
 
     draw_rectangle_r(
         [pos[0], pos[1], pos[0] + width, pos[1] + 32],
         5,
         fill=(fill if selected else colorGrayL1),
+        outline=outline
     )
     draw_text((pos[0] + 10, pos[1] + 10), text)
 
@@ -149,7 +150,9 @@ def draw_header(host, username):
     )
 
 
-def draw_platforms_list(platforms_selected_position, max_n_platforms, platforms, fill=colorViolet):
+def draw_platforms_list(
+    platforms_selected_position, max_n_platforms, platforms, fill=colorViolet
+):
     draw_rectangle_r([10, 35, 630, 437], 5, fill=colorGrayD2, outline=None)
     start_idx = int(platforms_selected_position / max_n_platforms) * max_n_platforms
     end_idx = start_idx + max_n_platforms
@@ -165,7 +168,13 @@ def draw_platforms_list(platforms_selected_position, max_n_platforms, platforms,
 
 
 def draw_roms_list(
-    roms_selected_position, max_n_roms, roms, header_text, header_color
+    roms_selected_position,
+    max_n_roms,
+    roms,
+    header_text,
+    header_color,
+    multi_selected_roms,
+    prepend_platform_slug=False,
 ):
     draw_rectangle_r([10, 37, 630, 100], 5, outline=colorGrayD2)
     draw_text(
@@ -180,12 +189,18 @@ def draw_roms_list(
     end_idx = start_idx + max_n_roms
     for i, r in enumerate(roms[start_idx:end_idx]):
         is_selected = i == (roms_selected_position % max_n_roms)
+        row_text = (
+            f"{r[0]} [{r[5]}]" if len(r[0]) <= 50 else r[0][:50] + f"... [{r[5]}]"
+        )
+        if prepend_platform_slug:
+            row_text = f"({r[2]}) " + row_text
         row_list(
-            f"{r[0]} [{r[5]}]" if len(r[0]) <= 50 else r[0][:50] + f"... [{r[5]}]",
+            row_text,
             (20, 80 + (i * 35)),
             600,
             is_selected,
             fill=header_color,
+            outline=header_color if r in multi_selected_roms else None
         )
 
 
