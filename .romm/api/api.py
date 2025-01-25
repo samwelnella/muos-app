@@ -2,6 +2,7 @@ import base64
 import json
 import math
 import os
+from collections import namedtuple
 from os import makedirs
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
@@ -11,6 +12,14 @@ from dotenv import load_dotenv
 
 # Load .env file from one folder above
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+
+
+Rom = namedtuple(
+    "Rom",
+    ["id", "name", "file_name", "platform_slug", "file_extension", "file_size"]
+)
+Collection = namedtuple("Collection", ["id", "name", "rom_count"])
+Platform = namedtuple("Platform", ["id", "display_name", "rom_count"])
 
 
 class API:
@@ -72,10 +81,10 @@ class API:
                 ):
                     continue
                 self.__platforms.append(
-                    (
-                        platform["display_name"],
-                        platform["id"],
-                        platform["rom_count"],
+                    Platform(
+                        id=platform["id"],
+                        display_name=platform["display_name"],
+                        rom_count=platform["rom_count"],
                     )
                 )
         return (self.__platforms, True, True)
@@ -105,19 +114,16 @@ class API:
                 if self.__include_collections:
                     if collection["name"] not in self.__include_collections:
                         continue
-                    self.__collections.append(
-                        (collection["name"], collection["id"], collection["rom_count"])
-                    )
                 elif self.__exclude_collections:
                     if collection["name"] in self.__exclude_collections:
                         continue
-                    self.__collections.append(
-                        (collection["name"], collection["id"], collection["rom_count"])
+                self.__collections.append(
+                    Collection(
+                        id=collection["id"],
+                        name=collection["name"],
+                        rom_count=collection["rom_count"],
                     )
-                else:
-                    self.__collections.append(
-                        (collection["name"], collection["id"], collection["rom_count"])
-                    )
+                )
         return (self.__collections, True, True)
 
     def get_roms(self, view, id):
@@ -141,13 +147,13 @@ class API:
             return ([], False, False)
         roms = json.loads(response.read().decode("utf-8"))
         self.__roms = [
-            (
-                rom["name"],
-                rom["file_name"],
-                rom["platform_slug"],
-                rom["file_extension"],
-                rom["id"],
-                self.__human_readable_size(rom["file_size_bytes"]),
+            Rom(
+                id=rom["id"],
+                name=rom["name"],
+                file_name=rom["file_name"],
+                platform_slug=rom["platform_slug"],
+                file_extension=rom["file_extension"],
+                file_size=self.__human_readable_size(rom["file_size_bytes"]),
             )
             for rom in roms if rom["platform_slug"] in MUOS_SUPPORTED_PLATFORMS
         ]
@@ -157,7 +163,7 @@ class API:
         self.__roms = []
 
     def download_rom(self, rom, dest_path):
-        url = f"{self.host}{self.__roms_endpoint}/{rom[4]}/content/{quote(rom[1])}"
+        url = f"{self.host}{self.__roms_endpoint}/{rom.id}/content/{quote(rom.file_name)}"
         makedirs(os.path.dirname(dest_path), exist_ok=True)
 
         # Create a request with headers
