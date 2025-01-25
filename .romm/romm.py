@@ -19,9 +19,8 @@ class View(Enum):
 
 class StartMenuOptions(Enum):
     OPTION_1 = ("Dummy option 1", 0)
-    OPTION_2 = ("Dummy option 2", 1)
-    OPTION_3 = ("Dummy option 3", 2)
-    EXIT = ("Exit", 3)
+    ABOUT = ("About", 1)
+    EXIT = ("Exit", 2)
 
 
 class RomM:
@@ -307,6 +306,13 @@ class RomM:
             if self.start_menu_selected_position == StartMenuOptions.EXIT.value[1]:
                 ui.draw_end()
                 sys.exit()
+            elif self.start_menu_selected_position == StartMenuOptions.ABOUT.value[1]:
+                ui.draw_log("v0.1.0", text_color=ui.colorViolet)
+                time.sleep(2)
+                self.input.reset_input()
+        elif self.input.key("B"):
+            self.start_menu = not self.start_menu
+            self.input.reset_input()
         else:
             self.start_menu_selected_position = self.input.handle_navigation(
                 self.start_menu_selected_position,
