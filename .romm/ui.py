@@ -206,13 +206,14 @@ def draw_roms_list(
     draw_rectangle_r([10, 70, 630, 437], 0, fill=colorGrayD2, outline=None)
     start_idx = int(roms_selected_position / max_n_roms) * max_n_roms
     end_idx = start_idx + max_n_roms
+    max_len_text = 43
     for i, r in enumerate(roms[start_idx:end_idx]):
         is_selected = i == (roms_selected_position % max_n_roms)
         text_offset = 2 if r in multi_selected_roms else 0
         row_text = (
             f"{r[0]} [{r[5]}]"
-            if len(r[0]) <= 50 - text_offset
-            else r[0][: 50 - text_offset] + f"... [{r[5]}]"
+            if len(r[0]) <= max_len_text - text_offset
+            else r[0][: max_len_text - text_offset] + f"... [{r[5]}]"
         )
         if prepend_platform_slug:
             row_text = f"({r[2]}) " + row_text
@@ -236,7 +237,7 @@ def draw_start_menu(option_selected_position, options, fill=colorViolet):
     n_options = len(options)
     option_height = 32
     option_height_with_gap = 35
-    magic_number = 3 # Can't explain why this is needed, but it is
+    magic_number = 3  # Can't explain why this is needed, but it is
     draw_rectangle_r(
         [
             pos[0],
