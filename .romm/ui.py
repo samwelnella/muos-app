@@ -49,7 +49,7 @@ def draw_start():
 
 
 def draw_end():
-    global fb, mm
+    global mm
     mm.close()
     os.close(fb)
 
@@ -66,37 +66,31 @@ def draw_active(image):
 
 
 def draw_update():
-    global activeImage
     mm.seek(0)
     mm.write(activeImage.tobytes())
 
 
 def draw_clear():
-    global activeDraw
     activeDraw.rectangle([0, 0, screen_width, screen_height], fill="black")
 
 
 def draw_text(position, text, font=15, color="white", **kwargs):
-    global activeDraw
     activeDraw.text(position, text, font=fontFile[font], fill=color, **kwargs)
 
 
 def draw_rectangle(position, fill=None, outline=None, width=1):
-    global activeDraw
     activeDraw.rectangle(position, fill=fill, outline=outline, width=width)
 
 
 def draw_rectangle_r(position, radius, fill=None, outline=None):
-    global activeDraw
     activeDraw.rounded_rectangle(position, radius, fill=fill, outline=outline)
 
 
-def row_list(text, pos, width, selected, fill=colorViolet, outline=None):
-    global colorViolet, colorGrayL1
-
+def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None):
+    radius = 5
     draw_rectangle_r(
-        [pos[0], pos[1], pos[0] + width, pos[1] + 32],
-        5,
+        [pos[0], pos[1], pos[0] + width, pos[1] + height],
+        radius,
         fill=(fill if selected else colorGrayL1),
         outline=outline,
     )
@@ -104,7 +98,6 @@ def row_list(text, pos, width, selected, fill=colorViolet, outline=None):
 
 
 def draw_circle(position, radius, fill=None, outline="white"):
-    global activeDraw
     activeDraw.ellipse(
         [
             position[0] - radius,
@@ -118,34 +111,58 @@ def draw_circle(position, radius, fill=None, outline="white"):
 
 
 def button_circle(pos, button, text, color=colorViolet):
-    global colorViolet
+    radius = 10
+    btn_text_offset = 1
+    label_margin_l = 20
+    draw_circle(pos, radius, fill=color, outline=None)
+    draw_text((pos[0] + btn_text_offset, pos[1] + btn_text_offset), button, anchor="mm")
+    draw_text((pos[0] + label_margin_l, pos[1]), text, font=13, anchor="lm")
 
-    draw_circle(pos, 10, fill=color, outline=None)
-    draw_text((pos[0] + 1, pos[1] + 1), button, anchor="mm")
-    draw_text((pos[0] + 20, pos[1]), text, font=13, anchor="lm")
 
-
-def draw_log(text, fill="Black", outline="black", lines=1):
-    global screen_width, screen_height
-
+def draw_log(text, fill="Black", outline="black", text_color="white", lines=1):
+    margin_bg = 5
+    margin_bg_bottom = 40
+    radius_bg = 5
+    max_len_text = 65
+    margin_text = 15
+    margin_text_bottom = 30
+    max_len_text_multiline = 79
+    margin_text_multiline = 15
+    margin_text_bottom_multiline = 38
     draw_rectangle_r(
-        [5, screen_height - 40, screen_width - 5, screen_height - 5],
-        5,
+        [
+            margin_bg,
+            screen_height - margin_bg_bottom,
+            screen_width - margin_bg,
+            screen_height - margin_bg,
+        ],
+        radius_bg,
         fill=fill,
         outline=outline,
     )
     if lines == 2:
-        draw_text((15, screen_height - 39), text if len(text) <= 79 else text[:79] + "...")
+        draw_text(
+            (margin_text_multiline, screen_height - margin_text_bottom_multiline),
+            (
+                text
+                if len(text) <= max_len_text_multiline
+                else text[:max_len_text_multiline] + "..."
+            ),
+            color=text_color,
+        )
     else:
-        draw_text((15, screen_height - 30), text if len(text) <= 65 else text[:65] + "...")
-    draw_update()
+        draw_text(
+            (margin_text, screen_height - margin_text_bottom),
+            text if len(text) <= max_len_text else text[:max_len_text] + "...",
+            color=text_color,
+        )
+    draw_update()  # Update to show log before any api call that can block the render
 
 
 def draw_header(host, username):
-    global screen_width
-
+    pos = [screen_width / 2, 20]
     draw_text(
-        (screen_width / 2, 20),
+        (pos[0], pos[1]),
         f"RomM | Host: {host} | User: {username}",
         anchor="mm",
     )
@@ -163,6 +180,7 @@ def draw_platforms_list(
             (f"{p[0]} ({p[2]})" if len(p[0]) <= 55 else p[0][:55] + f"... ({p[2]})"),
             (20, 45 + (i * 35)),
             600,
+            32,
             is_selected,
             fill=fill,
         )
@@ -204,9 +222,43 @@ def draw_roms_list(
             row_text,
             (20, 80 + (i * 35)),
             600,
+            32,
             is_selected,
             fill=header_color,
             outline=header_color if r in multi_selected_roms else None,
+        )
+
+
+def draw_start_menu(option_selected_position, options, fill=colorViolet):
+    pos = [screen_width / 3, screen_height / 3]
+    padding = 5
+    width = 200
+    n_options = len(options)
+    option_height = 32
+    option_height_with_gap = 35
+    magic_number = 3 # Can't explain why this is needed, but it is
+    draw_rectangle_r(
+        [
+            pos[0],
+            pos[1],
+            pos[0] + width + padding * 2,
+            n_options * option_height_with_gap + padding * 2 + pos[1] - magic_number,
+        ],
+        5,
+        fill=colorGrayD2,
+        outline=colorViolet,
+    )
+    start_idx = int(option_selected_position / n_options) * n_options
+    end_idx = start_idx + n_options
+    for i, option in enumerate(options[start_idx:end_idx]):
+        is_selected = i == (option_selected_position % n_options)
+        row_list(
+            option[0],
+            (pos[0] + padding, pos[1] + padding + (i * option_height_with_gap)),
+            width,
+            option_height,
+            is_selected,
+            fill=fill,
         )
 
 

@@ -120,13 +120,10 @@ class API:
                     )
         return (self.__collections, True, True)
 
-    def get_roms(self, bucket, id, refresh=False):
-        if len(self.__roms) > 0 and not refresh:
-            return (self.__roms, True, True)
-
+    def get_roms(self, view, id):
         try:
             request = Request(
-                f"{self.host}{self.__roms_endpoint}?{bucket}_id={id}&order_by=name&order_dir=asc",
+                f"{self.host}{self.__roms_endpoint}?{view}_id={id}&order_by=name&order_dir=asc",
                 headers=self.__headers,
             )
         except ValueError:

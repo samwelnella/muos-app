@@ -51,7 +51,6 @@ class Input():
         if self.key_name == key_name:
             if key_value != 99:
                 return self.key_value == key_value
-            print(self.key_name, self.key_value)
             return True
         return False
 
