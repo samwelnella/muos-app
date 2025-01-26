@@ -119,16 +119,21 @@ def button_circle(pos, button, text, color=colorViolet):
     draw_text((pos[0] + label_margin_l, pos[1]), text, font=13, anchor="lm")
 
 
-def draw_log(text, fill="Black", outline="black", text_color="white", lines=1):
+def draw_log(
+    text_line_1="",
+    text_line_2="",
+    fill="Black",
+    outline="black",
+    text_color="white",
+):
     margin_bg = 5
     margin_bg_bottom = 40
     radius_bg = 5
-    max_len_text = 65
+    max_len_text = 68
     margin_text = 15
-    margin_text_bottom = 30
-    max_len_text_multiline = 79
-    margin_text_multiline = 15
-    margin_text_bottom_multiline = 38
+    margin_text_bottom = 28
+    margin_text_bottom_multiline_line_1 = 38
+    margin_text_bottom_multiline_line_2 = 21
     draw_rectangle_r(
         [
             margin_bg,
@@ -140,20 +145,30 @@ def draw_log(text, fill="Black", outline="black", text_color="white", lines=1):
         fill=fill,
         outline=outline,
     )
-    if lines == 2:
-        draw_text(
-            (margin_text_multiline, screen_height - margin_text_bottom_multiline),
+    draw_text(
+        (
+            margin_text,
             (
-                text
-                if len(text) <= max_len_text_multiline
-                else text[:max_len_text_multiline] + "..."
+                screen_height - margin_text_bottom
+                if not text_line_2
+                else screen_height - margin_text_bottom_multiline_line_1
             ),
-            color=text_color,
-        )
-    else:
+        ),
+        (
+            text_line_1
+            if len(text_line_1) <= max_len_text
+            else text_line_1[:max_len_text] + "..."
+        ),
+        color=text_color,
+    )
+    if text_line_2:
         draw_text(
-            (margin_text, screen_height - margin_text_bottom),
-            text if len(text) <= max_len_text else text[:max_len_text] + "...",
+            (margin_text, screen_height - margin_text_bottom_multiline_line_2),
+            (
+                text_line_2
+                if len(text_line_2) <= max_len_text
+                else text_line_2[:max_len_text] + "..."
+            ),
             color=text_color,
         )
     draw_update()  # Update to show log before any api call that can block the render
@@ -194,7 +209,9 @@ def draw_collections_list(
     collections_selected_position, max_n_collections, collections, fill=colorViolet
 ):
     draw_rectangle_r([10, 35, 630, 437], 5, fill=colorGrayD2, outline=None)
-    start_idx = int(collections_selected_position / max_n_collections) * max_n_collections
+    start_idx = (
+        int(collections_selected_position / max_n_collections) * max_n_collections
+    )
     end_idx = start_idx + max_n_collections
     for i, c in enumerate(collections[start_idx:end_idx]):
         is_selected = i == (collections_selected_position % max_n_collections)
@@ -237,9 +254,9 @@ def draw_roms_list(
         is_selected = i == (roms_selected_position % max_n_roms)
         text_offset = 2 if r in multi_selected_roms else 0
         row_text = (
-            f"{r.name} [{r.file_size}]"
+            f"{r.name} [{r.file_size[0]}{r.file_size[1]}]"
             if len(r.name) <= max_len_text - text_offset
-            else r.name[: max_len_text - text_offset] + f"... [{r.file_size}]"
+            else r.name[: max_len_text - text_offset] + f"... [{r.file_size[0]}{r.file_size[1]}]"
         )
         if prepend_platform_slug:
             row_text = f"({r.platform_slug}) " + row_text

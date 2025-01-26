@@ -16,7 +16,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 Rom = namedtuple(
     "Rom",
-    ["id", "name", "file_name", "platform_slug", "file_extension", "file_size"]
+    ["id", "name", "file_name", "platform_slug", "file_extension", "file_size", "file_size_bytes"],
 )
 Collection = namedtuple("Collection", ["id", "name", "rom_count"])
 Platform = namedtuple("Platform", ["id", "display_name", "rom_count"])
@@ -51,7 +51,7 @@ class API:
         i = int(math.floor(math.log(size_bytes, 1024)))
         p = math.pow(1024, i)
         s = round(size_bytes / p, 2)
-        return f"{s} {size_name[i]}"
+        return (s, size_name[i])
 
     def get_platforms(self):
         try:
@@ -154,6 +154,7 @@ class API:
                 platform_slug=rom["platform_slug"],
                 file_extension=rom["file_extension"],
                 file_size=self.__human_readable_size(rom["file_size_bytes"]),
+                file_size_bytes=rom["file_size_bytes"],
             )
             for rom in roms if rom["platform_slug"] in MUOS_SUPPORTED_PLATFORMS
         ]
@@ -177,16 +178,24 @@ class API:
             if request.type not in ("http", "https"):
                 return ([], False, False)
             with urlopen(request) as response, open(dest_path, "wb") as out_file: # trunk-ignore(bandit/B310)
-                out_file.write(response.read())
+                total_bytes = 0
+                chunk_size = 1024
+                while True:
+                    chunk = response.read(chunk_size)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
+                    total_bytes += len(chunk)
+                    yield (total_bytes, True, True)
         except HTTPError as e:
             if e.code == 403:
-                return (True, False)
+                return (0, True, False)
             else:
                 raise
         except URLError:
-            return (False, False)
+            return (0, False, False)
 
-        return (True, True)
+        return (0, True, True)
 
 
 MUOS_SUPPORTED_PLATFORMS = frozenset(

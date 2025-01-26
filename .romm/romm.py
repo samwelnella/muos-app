@@ -45,6 +45,11 @@ class RomM:
         self.collections_ready = threading.Event()
         self.roms = []
         self.roms_ready = threading.Event()
+        self.download_queue = []
+        self.downloading_rom = None
+        self.downloaded_rom_bytes_progress = 0
+        self.downloading_rom_position = 0
+        self.download_rom_ready = threading.Event()
         self.max_n_platforms = 11
         self.max_n_collections = 11
         self.max_n_roms = 10
@@ -91,13 +96,30 @@ class RomM:
             )
         self.roms_ready.set()
 
-    def start(self):
-        threading.Thread(target=self.input.check, daemon=True).start()
-        ui.draw_header(self.romm_provider.host, self.romm_provider.username)
-        self._render_platforms_view()
-        threading.Thread(target=self._fetch_platforms).start()
-        threading.Thread(target=self._fetch_collections).start()
-        self.roms_ready.set()
+    def _download_roms(self):
+        self.download_queue.sort(key=lambda rom: rom.name)
+        for i, rom in enumerate(self.download_queue):
+            self.downloading_rom = rom
+            self.downloading_rom_position = i + 1
+            dest_path = os.path.join(
+                self.fs.get_sd_storage_platform_path(rom.platform_slug),
+                rom.file_name,
+            )
+            for (
+                current_downloaded_bytes,
+                valid_host,
+                valid_credentials,
+            ) in self.romm_provider.download_rom(self.downloading_rom, dest_path):
+                if not valid_host or not valid_credentials:
+                    self.valid_host = valid_host
+                    self.valid_credentials = valid_credentials
+                    break
+                self.downloaded_rom_bytes_progress = current_downloaded_bytes
+            self.downloaded_rom_bytes_progress = 0
+        self.downloading_rom = None
+        self.multi_selected_roms = []
+        self.download_queue = []
+        self.download_rom_ready.set()
 
     def _render_platforms_view(self):
         ui.draw_platforms_list(
@@ -106,9 +128,28 @@ class RomM:
             self.platforms,
         )
         if not self.platforms_ready.is_set():
-            ui.draw_log(f"Fetching platforms {next(self.spinner)}")
+            ui.draw_log(text_line_1=f"{next(self.spinner)} Fetching platforms")
             time.sleep(0.1)
-
+        elif not self.download_rom_ready.is_set() and self.downloading_rom:
+            ui.draw_log(
+                text_line_1=f"{(self.downloaded_rom_bytes_progress/self.downloading_rom.file_size_bytes)*100:.2f}% | {self.downloading_rom_position}/{len(self.download_queue)} | Downloading {self.downloading_rom.name}",
+                text_line_2=f"({self.downloading_rom.file_name})",
+            )
+            time.sleep(0.1)
+        elif not self.valid_host:
+            ui.draw_log(
+                text_line_1="Error: Invalid host",
+                text_color=ui.colorRed,
+            )
+            time.sleep(2)
+            self.valid_host = True
+        elif not self.valid_credentials:
+            ui.draw_log(
+                text_line_1="Error: Permission denied",
+                text_color=ui.colorRed,
+            )
+            time.sleep(2)
+            self.valid_credentials = True
         else:
             ui.button_circle((30, 460), "A", "Select", color=ui.colorRed)
             ui.button_circle((133, 460), "Y", "Refresh", color=ui.colorGreen)
@@ -155,8 +196,28 @@ class RomM:
             fill=ui.colorYellow,
         )
         if not self.collections_ready.is_set():
-            ui.draw_log(f"Fetching collections {next(self.spinner)}")
+            ui.draw_log(text_line_1=f"{next(self.spinner)} Fetching collections")
             time.sleep(0.1)
+        elif not self.download_rom_ready.is_set() and self.downloading_rom:
+            ui.draw_log(
+                text_line_1=f"{(self.downloaded_rom_bytes_progress/self.downloading_rom.file_size_bytes)*100:.2f}% | {self.downloading_rom_position}/{len(self.download_queue)} | Downloading {self.downloading_rom.name}",
+                text_line_2=f"({self.downloading_rom.file_name})",
+            )
+            time.sleep(0.1)
+        elif not self.valid_host:
+            ui.draw_log(
+                text_line_1="Error: Invalid host",
+                text_color=ui.colorRed,
+            )
+            time.sleep(2)
+            self.valid_host = True
+        elif not self.valid_credentials:
+            ui.draw_log(
+                text_line_1="Error: Permission denied",
+                text_color=ui.colorRed,
+            )
+            time.sleep(2)
+            self.valid_credentials = True
         else:
             ui.button_circle((30, 460), "A", "Select", color=ui.colorRed)
             ui.button_circle((133, 460), "Y", "Refresh", color=ui.colorGreen)
@@ -216,8 +277,28 @@ class RomM:
             prepend_platform_slug=self.previows_view == View.COLLECTIONS.value,
         )
         if not self.roms_ready.is_set():
-            ui.draw_log(f"Fetching roms {next(self.spinner)}")
+            ui.draw_log(text_line_1=f"{next(self.spinner)} Fetching roms")
             time.sleep(0.1)
+        elif not self.download_rom_ready.is_set() and self.downloading_rom:
+            ui.draw_log(
+                text_line_1=f"{(self.downloaded_rom_bytes_progress/self.downloading_rom.file_size_bytes)*100:.2f}% | {self.downloading_rom_position}/{len(self.download_queue)} | Downloading {self.downloading_rom.name}",
+                text_line_2=f"({self.downloading_rom.file_name})",
+            )
+            time.sleep(0.1)
+        elif not self.valid_host:
+            ui.draw_log(
+                text_line_1="Error: Invalid host",
+                text_color=ui.colorRed,
+            )
+            time.sleep(2)
+            self.valid_host = True
+        elif not self.valid_credentials:
+            ui.draw_log(
+                text_line_1="Error: Permission denied",
+                text_color=ui.colorRed,
+            )
+            time.sleep(2)
+            self.valid_credentials = True
         else:
             ui.button_circle((30, 460), "A", "Download", color=ui.colorRed)
             ui.button_circle((145, 460), "B", "Back", color=ui.colorYellow)
@@ -228,37 +309,16 @@ class RomM:
 
     def _update_roms_view(self):
         if self.input.key("A"):
-            if len(self.multi_selected_roms) == 0:
-                self.multi_selected_roms.append(self.roms[self.roms_selected_position])
-
-            for rom in self.multi_selected_roms:
-                ui.draw_log(f"Downloading {rom.name} ({rom.file_name})")
-                dest_path = os.path.join(
-                    self.fs.get_sd_storage_platform_path(rom.platform_slug),
-                    rom.file_name,
-                )
-
-                self.valid_host, self.valid_credentials = (
-                    self.romm_provider.download_rom(rom, dest_path)
-                )
-                if self.valid_host and self.valid_credentials:
-                    ui.draw_log(
-                        f"Downloaded to\n{dest_path}", lines=2, text_color=ui.colorGreen
+            if self.roms_ready.is_set() and self.download_rom_ready.is_set():
+                self.download_rom_ready.clear()
+                # If no game is "multi-selected" the current game is added to the download list
+                if len(self.multi_selected_roms) == 0:
+                    self.multi_selected_roms.append(
+                        self.roms[self.roms_selected_position]
                     )
-                elif not self.valid_host:
-                    ui.draw_log("Error: Invalid host", text_color=ui.colorRed)
-                    self.valid_host = True
-                elif not self.valid_credentials:
-                    ui.draw_log("Error: Permission denied", text_color=ui.colorRed)
-                    self.valid_credentials = True
-                else:
-                    ui.draw_log(
-                        "Error: Invalid host or permission denied",
-                        text_color=ui.colorRed,
-                    )
-                time.sleep(2)
-            self.multi_selected_roms = []
-            self.input.reset_input()
+                self.download_queue = self.multi_selected_roms
+                threading.Thread(target=self._download_roms).start()
+                self.input.reset_input()
         elif self.input.key("B"):
             self.current_view = self.previows_view
             self.romm_provider.reset_roms_list()
@@ -277,21 +337,29 @@ class RomM:
             new = self.fs.get_sd_storage()
             if new == current:
                 ui.draw_log(
-                    f"Error: Couldn't find path {self.fs.get_sd2_storage_path()}",
+                    text_line_1=f"Error: Couldn't find path {self.fs.get_sd2_storage_path()}",
                     text_color=ui.colorRed,
                 )
             else:
                 ui.draw_log(
-                    f"Set download path to SD {self.fs.get_sd_storage()}: {self.fs.get_sd_storage_platform_path(self.roms[self.roms_selected_position].platform_slug)}",
+                    text_line_1=f"Set download path to SD {self.fs.get_sd_storage()}: {self.fs.get_sd_storage_platform_path(self.roms[self.roms_selected_position].platform_slug)}",
                     text_color=ui.colorGreen,
                 )
             time.sleep(2)
             self.input.reset_input()
         elif self.input.key("SELECT"):
-            if self.roms[self.roms_selected_position] not in self.multi_selected_roms:
-                self.multi_selected_roms.append(self.roms[self.roms_selected_position])
-            else:
-                self.multi_selected_roms.remove(self.roms[self.roms_selected_position])
+            if self.download_rom_ready.is_set():
+                if (
+                    self.roms[self.roms_selected_position]
+                    not in self.multi_selected_roms
+                ):
+                    self.multi_selected_roms.append(
+                        self.roms[self.roms_selected_position]
+                    )
+                else:
+                    self.multi_selected_roms.remove(
+                        self.roms[self.roms_selected_position]
+                    )
             self.input.reset_input()
         else:
             self.roms_selected_position = self.input.handle_navigation(
@@ -307,8 +375,6 @@ class RomM:
                 ui.draw_end()
                 sys.exit()
             elif self.start_menu_selected_position == StartMenuOptions.ABOUT.value[1]:
-                ui.draw_log("v0.1.0", text_color=ui.colorViolet)
-                time.sleep(2)
                 self.input.reset_input()
         elif self.input.key("B"):
             self.start_menu = not self.start_menu
@@ -324,6 +390,15 @@ class RomM:
         if self.input.key("START"):
             self.start_menu = not self.start_menu
             self.input.reset_input()
+
+    def start(self):
+        threading.Thread(target=self.input.check, daemon=True).start()
+        ui.draw_header(self.romm_provider.host, self.romm_provider.username)
+        self._render_platforms_view()
+        threading.Thread(target=self._fetch_platforms).start()
+        threading.Thread(target=self._fetch_collections).start()
+        self.roms_ready.set()
+        self.download_rom_ready.set()
 
     def update(self):
         ui.draw_clear()
