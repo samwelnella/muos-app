@@ -99,7 +99,7 @@ class API:
         try:
             if request.type not in ("http", "https"):
                 return ([], False, False)
-            response = urlopen(request) # trunk-ignore(bandit/B310)
+            response = urlopen(request, timeout=60) # trunk-ignore(bandit/B310)
         except HTTPError as e:
             if e.code == 403:
                 return ([], True, False)
@@ -137,7 +137,7 @@ class API:
         try:
             if request.type not in ("http", "https"):
                 return ([], False, False)
-            response = urlopen(request) # trunk-ignore(bandit/B310)
+            response = urlopen(request, timeout=1800) # trunk-ignore(bandit/B310)
         except HTTPError as e:
             if e.code == 403:
                 return ([], True, False)

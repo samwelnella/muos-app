@@ -23,6 +23,7 @@ fontFile[11] = ImageFont.truetype(
 )
 colorViolet = "#ad3c6b"
 colorGreen = "#41aa3b"
+colorDarkGreen = "#3d6b39"
 colorRed = "#3c3cad"
 colorBlue = "#bb7200"
 colorYellow = "#3b80aa"
@@ -125,26 +126,28 @@ def draw_log(
     fill="Black",
     outline="black",
     text_color="white",
+    background=True,
 ):
     margin_bg = 5
     margin_bg_bottom = 40
     radius_bg = 5
-    max_len_text = 68
+    max_len_text = 65
     margin_text = 15
     margin_text_bottom = 28
     margin_text_bottom_multiline_line_1 = 38
     margin_text_bottom_multiline_line_2 = 21
-    draw_rectangle_r(
-        [
-            margin_bg,
-            screen_height - margin_bg_bottom,
-            screen_width - margin_bg,
-            screen_height - margin_bg,
-        ],
-        radius_bg,
-        fill=fill,
-        outline=outline,
-    )
+    if background:
+        draw_rectangle_r(
+            [
+                margin_bg,
+                screen_height - margin_bg_bottom,
+                screen_width - margin_bg,
+                screen_height - margin_bg,
+            ],
+            radius_bg,
+            fill=fill,
+            outline=outline,
+        )
     draw_text(
         (
             margin_text,
@@ -172,6 +175,24 @@ def draw_log(
             color=text_color,
         )
     draw_update()  # Update to show log before any api call that can block the render
+
+
+def draw_loader(percent):
+    margin = 10
+    margin_top = 38
+    margin_bottom = 4
+    radius = 2
+    draw_rectangle_r(
+        [
+            margin,
+            screen_height - margin_top,
+            margin + (screen_width - 2 * margin) * (percent / 100),
+            screen_height - margin_bottom,
+        ],
+        radius,
+        fill=colorDarkGreen,
+        outline=None,
+    )
 
 
 def draw_header(host, username):
@@ -256,7 +277,8 @@ def draw_roms_list(
         row_text = (
             f"{r.name} [{r.file_size[0]}{r.file_size[1]}]"
             if len(r.name) <= max_len_text - text_offset
-            else r.name[: max_len_text - text_offset] + f"... [{r.file_size[0]}{r.file_size[1]}]"
+            else r.name[: max_len_text - text_offset]
+            + f"... [{r.file_size[0]}{r.file_size[1]}]"
         )
         if prepend_platform_slug:
             row_text = f"({r.platform_slug}) " + row_text

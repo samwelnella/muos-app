@@ -48,6 +48,7 @@ class RomM:
         self.download_queue = []
         self.downloading_rom = None
         self.downloaded_rom_bytes_progress = 0
+        self.downloaded_percent = 0
         self.downloading_rom_position = 0
         self.download_rom_ready = threading.Event()
         self.max_n_platforms = 11
@@ -115,6 +116,11 @@ class RomM:
                     self.valid_credentials = valid_credentials
                     break
                 self.downloaded_rom_bytes_progress = current_downloaded_bytes
+                self.downloaded_percent = (
+                    self.downloaded_rom_bytes_progress
+                    / self.downloading_rom.file_size_bytes
+                ) * 100
+            self.downloaded_percent = 0
             self.downloaded_rom_bytes_progress = 0
         self.downloading_rom = None
         self.multi_selected_roms = []
@@ -131,9 +137,11 @@ class RomM:
             ui.draw_log(text_line_1=f"{next(self.spinner)} Fetching platforms")
             time.sleep(0.1)
         elif not self.download_rom_ready.is_set() and self.downloading_rom:
+            ui.draw_loader(self.downloaded_percent)
             ui.draw_log(
-                text_line_1=f"{(self.downloaded_rom_bytes_progress/self.downloading_rom.file_size_bytes)*100:.2f}% | {self.downloading_rom_position}/{len(self.download_queue)} | Downloading {self.downloading_rom.name}",
+                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | Downloading {self.downloading_rom.name}",
                 text_line_2=f"({self.downloading_rom.file_name})",
+                background=False,
             )
             time.sleep(0.1)
         elif not self.valid_host:
@@ -199,9 +207,11 @@ class RomM:
             ui.draw_log(text_line_1=f"{next(self.spinner)} Fetching collections")
             time.sleep(0.1)
         elif not self.download_rom_ready.is_set() and self.downloading_rom:
+            ui.draw_loader(self.downloaded_percent)
             ui.draw_log(
-                text_line_1=f"{(self.downloaded_rom_bytes_progress/self.downloading_rom.file_size_bytes)*100:.2f}% | {self.downloading_rom_position}/{len(self.download_queue)} | Downloading {self.downloading_rom.name}",
+                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | Downloading {self.downloading_rom.name}",
                 text_line_2=f"({self.downloading_rom.file_name})",
+                background=False,
             )
             time.sleep(0.1)
         elif not self.valid_host:
@@ -280,9 +290,11 @@ class RomM:
             ui.draw_log(text_line_1=f"{next(self.spinner)} Fetching roms")
             time.sleep(0.1)
         elif not self.download_rom_ready.is_set() and self.downloading_rom:
+            ui.draw_loader(self.downloaded_percent)
             ui.draw_log(
-                text_line_1=f"{(self.downloaded_rom_bytes_progress/self.downloading_rom.file_size_bytes)*100:.2f}% | {self.downloading_rom_position}/{len(self.download_queue)} | Downloading {self.downloading_rom.name}",
+                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | Downloading {self.downloading_rom.name}",
                 text_line_2=f"({self.downloading_rom.file_name})",
+                background=False,
             )
             time.sleep(0.1)
         elif not self.valid_host:
