@@ -17,9 +17,8 @@ class View(Enum):
 
 
 class StartMenuOptions(Enum):
-    OPTION_1 = ("Dummy option 1", 0)
-    ABOUT = (f"{ui.glyphs.about} About", 1)
-    EXIT = (f"{ui.glyphs.exit} Exit", 2)
+    ABOUT = (f"{ui.glyphs.about} About", 0)
+    EXIT = (f"{ui.glyphs.exit} Exit", 1)
 
 
 class RomM:

@@ -17,7 +17,7 @@ screen_size = screen_width * screen_height * bytes_per_pixel
 fontFile = {}
 fontFile[15] = ImageFont.truetype("/usr/share/fonts/romm/romm.ttf", 15)
 
-_Glyphs = namedtuple(
+glyphs = namedtuple(
     "Glyphs",
     [
         "host",
@@ -30,8 +30,7 @@ _Glyphs = namedtuple(
         "about",
         "exit",
     ],
-)
-glyphs = _Glyphs(
+)(
     host="\uf01b",
     user="\uf007",
     download="\uf019",
@@ -119,7 +118,7 @@ def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None)
         fill=(fill if selected else colorGrayL1),
         outline=outline,
     )
-    draw_text((pos[0] + 10, pos[1] + 10), text)
+    draw_text((pos[0] + 12, pos[1] + 9), text)
 
 
 def draw_circle(position, radius, fill=None, outline="white"):
