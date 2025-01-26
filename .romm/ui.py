@@ -1,6 +1,9 @@
 import mmap
 import os
 from fcntl import ioctl
+from collections import namedtuple
+from filesystem.filesystem import Filesystem
+import itertools
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -12,15 +15,34 @@ bytes_per_pixel = 4
 screen_size = screen_width * screen_height * bytes_per_pixel
 
 fontFile = {}
-fontFile[15] = ImageFont.truetype(
-    "/usr/share/fonts/liberation/LiberationMono-Regular.ttf", 15
+fontFile[15] = ImageFont.truetype("/usr/share/fonts/romm/romm.ttf", 15)
+
+_Glyphs = namedtuple(
+    "Glyphs",
+    [
+        "host",
+        "user",
+        "download",
+        "spinner",
+        "cloud_sync",
+        "checkbox",
+        "checkbox_selected",
+        "about",
+        "exit",
+    ],
 )
-fontFile[13] = ImageFont.truetype(
-    "/usr/share/fonts/liberation/LiberationMono-Regular.ttf", 13
+glyphs = _Glyphs(
+    host="\uf01b",
+    user="\uf007",
+    download="\uf019",
+    spinner=itertools.cycle(["\uf01e", "\uf01f", "\uf020", "\uf021"]),
+    checkbox="\uf01c",
+    checkbox_selected="\uf01d",
+    cloud_sync="\uf01a",
+    about="\uf05a",
+    exit="\uf2d3",
 )
-fontFile[11] = ImageFont.truetype(
-    "/usr/share/fonts/liberation/LiberationMono-Regular.ttf", 11
-)
+
 colorViolet = "#ad3c6b"
 colorGreen = "#41aa3b"
 colorDarkGreen = "#3d6b39"
@@ -32,6 +54,8 @@ colorGrayD2 = "#141414"
 
 activeImage: Image.Image
 activeDraw: ImageDraw.ImageDraw
+
+fs = Filesystem()
 
 
 def screen_reset():
@@ -117,7 +141,7 @@ def button_circle(pos, button, text, color=colorViolet):
     label_margin_l = 20
     draw_circle(pos, radius, fill=color, outline=None)
     draw_text((pos[0] + btn_text_offset, pos[1] + btn_text_offset), button, anchor="mm")
-    draw_text((pos[0] + label_margin_l, pos[1]), text, font=13, anchor="lm")
+    draw_text((pos[0] + label_margin_l, pos[1]), text, font=15, anchor="lm")
 
 
 def draw_log(
@@ -196,11 +220,16 @@ def draw_loader(percent):
 
 
 def draw_header(host, username):
-    pos = [screen_width / 2, 20]
+    pos_text = [55, 10]
+    logo = Image.open("resources/romm.png")
+    pos_logo = [15, 7]
+    activeImage.paste(
+        logo, (pos_logo[0], pos_logo[1]), mask=logo if logo.mode == "RGBA" else None
+    )
+
     draw_text(
-        (pos[0], pos[1]),
-        f"RomM | Host: {host} | User: {username}",
-        anchor="mm",
+        (pos_text[0], pos_text[1]),
+        f"{glyphs.host} {host} | {glyphs.user} {username}",
     )
 
 
@@ -270,20 +299,25 @@ def draw_roms_list(
     draw_rectangle_r([10, 70, 630, 437], 0, fill=colorGrayD2, outline=None)
     start_idx = int(roms_selected_position / max_n_roms) * max_n_roms
     end_idx = start_idx + max_n_roms
-    max_len_text = 43
+    max_len_text = 47
     for i, r in enumerate(roms[start_idx:end_idx]):
         is_selected = i == (roms_selected_position % max_n_roms)
-        text_offset = 2 if r in multi_selected_roms else 0
+        is_in_device = os.path.exists(
+            os.path.join(
+                fs.get_sd_storage_platform_path(r.platform_slug),
+                r.file_name,
+            )
+        )
+        sync_flag_text = f"{glyphs.cloud_sync} " if is_in_device else ""
         row_text = (
-            f"{r.name} [{r.file_size[0]}{r.file_size[1]}]"
-            if len(r.name) <= max_len_text - text_offset
-            else r.name[: max_len_text - text_offset]
-            + f"... [{r.file_size[0]}{r.file_size[1]}]"
+            f"{r.name} [{r.file_size[0]}{r.file_size[1]}] {sync_flag_text}"
+            if len(r.name) <= max_len_text
+            else r.name[:max_len_text]
+            + f"... [{r.file_size[0]}{r.file_size[1]}] {sync_flag_text}"
         )
         if prepend_platform_slug:
             row_text = f"({r.platform_slug}) " + row_text
-        if r in multi_selected_roms:
-            row_text = f"* {row_text}"
+        row_text = f"{glyphs.checkbox_selected if r in multi_selected_roms else glyphs.checkbox} {row_text}"
         row_list(
             row_text,
             (20, 80 + (i * 35)),

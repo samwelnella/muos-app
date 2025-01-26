@@ -2,6 +2,12 @@ import os
 
 
 class Filesystem:
+    _instance = None
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super(Filesystem, cls).__new__(cls)
+        return cls._instance
 
     def __init__(self):
         self.__sd1_rom_storage_path = "/mnt/mmc/roms"

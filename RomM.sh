@@ -8,12 +8,21 @@ echo app >/tmp/act_go
 
 ROOT_DIR="$(GET_VAR "device" "storage/rom/mount")/MUOS/application/.romm"
 LOG_DIR="${ROOT_DIR}/logs"
+ICON_DIR=/opt/muos/default/MUOS/theme/active/glyph/muxapp/
+FONTS_DIR="/usr/share/fonts/romm"
 mkdir -p "${LOG_DIR}"
 
-# Check if romm.png exists
-if [[ ! -f "/opt/muos/default/MUOS/theme/active/glyph/muxapp/romm.png" ]];
+# Check if icon exists
+if [[ ! -f "${ICON_DIR}/romm.png" ]];
 then
-    cp "${ROOT_DIR}/resources/romm.png" "/opt/muos/default/MUOS/theme/active/glyph/muxapp/romm.png"
+    cp "${ROOT_DIR}/resources/romm.png" "${ICON_DIR}/romm.png"
+fi
+
+# Check if fonts are installed
+if [[ ! -f "${FONTS_DIR}/romm.ttf" ]];
+then
+    mkdir -p "${FONTS_DIR}"
+    cp "${ROOT_DIR}/fonts/romm.ttf" "${FONTS_DIR}/romm.ttf"
 fi
 
 # Check if pip is installed

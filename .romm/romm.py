@@ -3,7 +3,6 @@ import time
 import threading
 import os
 from enum import Enum
-import itertools
 
 import ui
 from filesystem.filesystem import Filesystem
@@ -19,8 +18,8 @@ class View(Enum):
 
 class StartMenuOptions(Enum):
     OPTION_1 = ("Dummy option 1", 0)
-    ABOUT = ("About", 1)
-    EXIT = ("Exit", 2)
+    ABOUT = (f"{ui.glyphs.about} About", 1)
+    EXIT = (f"{ui.glyphs.exit} Exit", 2)
 
 
 class RomM:
@@ -54,7 +53,6 @@ class RomM:
         self.max_n_platforms = 11
         self.max_n_collections = 11
         self.max_n_roms = 10
-        self.spinner = itertools.cycle(["|", "/", "-", "\\"])
 
     def _fetch_platforms(self):
         self.platforms, self.valid_host, self.valid_credentials = (
@@ -134,12 +132,12 @@ class RomM:
             self.platforms,
         )
         if not self.platforms_ready.is_set():
-            ui.draw_log(text_line_1=f"{next(self.spinner)} Fetching platforms")
+            ui.draw_log(text_line_1=f"{next(ui.glyphs.spinner)} Fetching platforms")
             time.sleep(0.1)
         elif not self.download_rom_ready.is_set() and self.downloading_rom:
             ui.draw_loader(self.downloaded_percent)
             ui.draw_log(
-                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | Downloading {self.downloading_rom.name}",
+                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | {ui.glyphs.download} {self.downloading_rom.name}",
                 text_line_2=f"({self.downloading_rom.file_name})",
                 background=False,
             )
@@ -204,12 +202,12 @@ class RomM:
             fill=ui.colorYellow,
         )
         if not self.collections_ready.is_set():
-            ui.draw_log(text_line_1=f"{next(self.spinner)} Fetching collections")
+            ui.draw_log(text_line_1=f"{next(ui.glyphs.spinner)} Fetching collections")
             time.sleep(0.1)
         elif not self.download_rom_ready.is_set() and self.downloading_rom:
             ui.draw_loader(self.downloaded_percent)
             ui.draw_log(
-                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | Downloading {self.downloading_rom.name}",
+                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | {ui.glyphs.download} {self.downloading_rom.name}",
                 text_line_2=f"({self.downloading_rom.file_name})",
                 background=False,
             )
@@ -287,12 +285,12 @@ class RomM:
             prepend_platform_slug=self.previows_view == View.COLLECTIONS.value,
         )
         if not self.roms_ready.is_set():
-            ui.draw_log(text_line_1=f"{next(self.spinner)} Fetching roms")
+            ui.draw_log(text_line_1=f"{next(ui.glyphs.spinner)} Fetching roms")
             time.sleep(0.1)
         elif not self.download_rom_ready.is_set() and self.downloading_rom:
             ui.draw_loader(self.downloaded_percent)
             ui.draw_log(
-                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | Downloading {self.downloading_rom.name}",
+                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | {ui.glyphs.download} {self.downloading_rom.name}",
                 text_line_2=f"({self.downloading_rom.file_name})",
                 background=False,
             )
