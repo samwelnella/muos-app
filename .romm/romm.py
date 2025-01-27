@@ -2,23 +2,22 @@ import sys
 import time
 import threading
 import os
-from enum import Enum
 
 import ui
 from filesystem.filesystem import Filesystem
 from api.api import API
 from input import Input
+from __version__ import version
 
 
-class View(Enum):
+class View:
     PLATFORMS = "platform"
     COLLECTIONS = "collection"
     ROMS = "roms"
 
 
-class StartMenuOptions(Enum):
-    ABOUT = (f"{ui.glyphs.about} About", 0)
-    EXIT = (f"{ui.glyphs.exit} Exit", 1)
+class StartMenuOptions:
+    EXIT = (f"{ui.glyphs.exit} Exit", 0)
 
 
 class RomM:
@@ -28,10 +27,14 @@ class RomM:
         self.input = Input()
         self.valid_host = True
         self.valid_credentials = True
-        self.current_view = View.PLATFORMS.value
-        self.previows_view = View.PLATFORMS.value
+        self.current_view = View.PLATFORMS
+        self.previows_view = View.PLATFORMS
         self.start_menu = False
-        self.start_menu_options = [option.value for option in StartMenuOptions]
+        self.start_menu_options = [
+            value
+            for name, value in StartMenuOptions.__dict__.items()
+            if not name.startswith("__")
+        ]
         self.platforms_selected_position = 0
         self.collections_selected_position = 0
         self.roms_selected_position = 0
@@ -66,17 +69,17 @@ class RomM:
         self.collections_ready.set()
 
     def _fetch_roms(self):
-        if self.current_view != View.ROMS.value:
+        if self.current_view != View.ROMS:
             self.roms, self.valid_host, self.valid_credentials = (
                 self.romm_provider.get_roms(
                     (
                         self.current_view
-                        if self.current_view != View.ROMS.value
+                        if self.current_view != View.ROMS
                         else self.previows_view
                     ),
                     (
                         self.platforms[self.platforms_selected_position].id
-                        if self.current_view == View.PLATFORMS.value
+                        if self.current_view == View.PLATFORMS
                         else self.collections[self.collections_selected_position].id
                     ),
                 )
@@ -87,7 +90,7 @@ class RomM:
                     self.previows_view,
                     (
                         self.platforms[self.platforms_selected_position].id
-                        if self.previows_view == View.PLATFORMS.value
+                        if self.previows_view == View.PLATFORMS
                         else self.collections[self.collections_selected_position].id
                     ),
                 )
@@ -161,11 +164,7 @@ class RomM:
             ui.button_circle(
                 (243, 460),
                 "X",
-                (
-                    "Collections"
-                    if self.current_view == View.PLATFORMS.value
-                    else "Platforms"
-                ),
+                ("Collections" if self.current_view == View.PLATFORMS else "Platforms"),
                 color=ui.colorBlue,
             )
 
@@ -174,8 +173,8 @@ class RomM:
             if self.roms_ready.is_set():
                 self.roms_ready.clear()
                 self.roms = []
-                self.previows_view = View.PLATFORMS.value
-                self.current_view = View.ROMS.value
+                self.previows_view = View.PLATFORMS
+                self.current_view = View.ROMS
                 threading.Thread(target=self._fetch_roms).start()
             self.input.reset_input()
         elif self.input.key("Y"):
@@ -184,7 +183,7 @@ class RomM:
                 threading.Thread(target=self._fetch_platforms).start()
             self.input.reset_input()
         elif self.input.key("X"):
-            self.current_view = View.COLLECTIONS.value
+            self.current_view = View.COLLECTIONS
             self.input.reset_input()
         else:
             self.platforms_selected_position = self.input.handle_navigation(
@@ -231,11 +230,7 @@ class RomM:
             ui.button_circle(
                 (243, 460),
                 "X",
-                (
-                    "Collections"
-                    if self.current_view == View.PLATFORMS.value
-                    else "Platforms"
-                ),
+                ("Collections" if self.current_view == View.PLATFORMS else "Platforms"),
                 color=ui.colorBlue,
             )
 
@@ -244,8 +239,8 @@ class RomM:
             if self.roms_ready.is_set():
                 self.roms_ready.clear()
                 self.roms = []
-                self.previows_view = View.COLLECTIONS.value
-                self.current_view = View.ROMS.value
+                self.previows_view = View.COLLECTIONS
+                self.current_view = View.ROMS
                 threading.Thread(target=self._fetch_roms).start()
             self.input.reset_input()
         elif self.input.key("Y"):
@@ -254,7 +249,7 @@ class RomM:
                 threading.Thread(target=self._fetch_collections).start()
             self.input.reset_input()
         elif self.input.key("X"):
-            self.current_view = View.PLATFORMS.value
+            self.current_view = View.PLATFORMS
             self.input.reset_input()
         else:
             self.collections_selected_position = self.input.handle_navigation(
@@ -266,13 +261,11 @@ class RomM:
     def _render_roms_view(self):
         header_text = (
             self.platforms[self.platforms_selected_position].display_name
-            if self.previows_view == View.PLATFORMS.value
+            if self.previows_view == View.PLATFORMS
             else self.collections[self.collections_selected_position].name
         )
         header_color = (
-            ui.colorViolet
-            if self.previows_view == View.PLATFORMS.value
-            else ui.colorYellow
+            ui.colorViolet if self.previows_view == View.PLATFORMS else ui.colorYellow
         )
         ui.draw_roms_list(
             self.roms_selected_position,
@@ -281,7 +274,7 @@ class RomM:
             header_text,
             header_color,
             self.multi_selected_roms,
-            prepend_platform_slug=self.previows_view == View.COLLECTIONS.value,
+            prepend_platform_slug=self.previows_view == View.COLLECTIONS,
         )
         if not self.roms_ready.is_set():
             ui.draw_log(text_line_1=f"{next(ui.glyphs.spinner)} Fetching roms")
@@ -376,14 +369,56 @@ class RomM:
             )
 
     def _render_start_menu(self):
-        ui.draw_start_menu(self.start_menu_selected_position, self.start_menu_options)
+        pos = [ui.screen_width / 3, ui.screen_height / 3]
+        padding = 5
+        width = 200
+        n_options = len(self.start_menu_options)
+        option_height = 32
+        option_height_with_gap = 35
+        version_x_adjustement = 50
+        version_height = 24
+        ui.draw_rectangle_r(
+            [
+                pos[0],
+                pos[1],
+                pos[0] + width + padding * 2,
+                n_options * option_height_with_gap
+                + padding * 2
+                + pos[1]
+                + version_height,
+            ],
+            5,
+            fill=ui.colorGrayD2,
+            outline=ui.colorViolet,
+        )
+        start_idx = int(self.start_menu_selected_position / n_options) * n_options
+        end_idx = start_idx + n_options
+        for i, option in enumerate(self.start_menu_options[start_idx:end_idx]):
+            is_selected = i == (self.start_menu_selected_position % n_options)
+            ui.row_list(
+                option[0],
+                (pos[0] + padding, pos[1] + padding + (i * option_height_with_gap)),
+                width,
+                option_height,
+                is_selected,
+            )
+        ui.draw_text(
+            (
+                pos[0] + width - version_x_adjustement,
+                pos[1]
+                + padding
+                + padding
+                + len(self.start_menu_options) * option_height_with_gap,
+            ),
+            f"v{version}",
+        )
 
     def _update_start_menu(self):
         if self.input.key("A"):
-            if self.start_menu_selected_position == StartMenuOptions.EXIT.value[1]:
+            if self.start_menu_selected_position == StartMenuOptions.EXIT[1]:
                 ui.draw_end()
                 sys.exit()
-            elif self.start_menu_selected_position == StartMenuOptions.ABOUT.value[1]:
+            elif self.start_menu_selected_position == StartMenuOptions.ABOUT[1]:
                 self.input.reset_input()
         elif self.input.key("B"):
             self.start_menu = not self.start_menu
@@ -417,15 +452,15 @@ class RomM:
         # Render view
         if self.valid_host:
             if self.valid_credentials:
-                if self.current_view == View.PLATFORMS.value:
+                if self.current_view == View.PLATFORMS:
                     self._render_platforms_view()
                     if not self.start_menu:
                         self._update_platforms_view()
-                elif self.current_view == View.COLLECTIONS.value:
+                elif self.current_view == View.COLLECTIONS:
                     self._render_collections_view()
                     if not self.start_menu:
                         self._update_collections_view()
-                elif self.current_view == View.ROMS.value:
+                elif self.current_view == View.ROMS:
                     self._render_roms_view()
                     if not self.start_menu:
                         self._update_roms_view()
