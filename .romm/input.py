@@ -55,7 +55,7 @@ class Input():
             return True
         return False
 
-    def handle_navigation(self, selected_position, max_items, total_items):
+    def handle_navigation(self, selected_position, items_per_page, total_items):
         if self.key("DY"):
             if self.key_value == 1:
                 if selected_position == total_items - 1:
@@ -71,28 +71,28 @@ class Input():
         elif self.key("DX"):
             if self.key_value == 1:
                 if selected_position < total_items - 1:
-                    if selected_position + max_items <= total_items - 1:
-                        selected_position = selected_position + max_items
+                    if selected_position + items_per_page <= total_items - 1:
+                        selected_position = selected_position + items_per_page
                     else:
                         selected_position = total_items - 1
             elif self.key_value == -1:
                 if selected_position > 0:
-                    if selected_position - max_items >= 0:
-                        selected_position = selected_position - max_items
+                    if selected_position - items_per_page >= 0:
+                        selected_position = selected_position - items_per_page
                     else:
                         selected_position = 0
             self.reset_input()
         elif self.key("L1"):
             if selected_position > 0:
-                if selected_position - max_items >= 0:
-                    selected_position = selected_position - max_items
+                if selected_position - items_per_page >= 0:
+                    selected_position = selected_position - items_per_page
                 else:
                     selected_position = 0
             self.reset_input()
         elif self.key("R1"):
             if selected_position < total_items - 1:
-                if selected_position + max_items <= total_items - 1:
-                    selected_position = selected_position + max_items
+                if selected_position + items_per_page <= total_items - 1:
+                    selected_position = selected_position + items_per_page
                 else:
                     selected_position = total_items - 1
             self.reset_input()

@@ -28,6 +28,7 @@ glyphs = namedtuple(
         "checkbox",
         "checkbox_selected",
         "about",
+        "delete",
         "exit",
     ],
 )(
@@ -39,6 +40,7 @@ glyphs = namedtuple(
     checkbox_selected="\uf01d",
     cloud_sync="\uf01a",
     about="\uf05a",
+    delete="\uf018",
     exit="\uf2d3",
 )
 
@@ -112,13 +114,15 @@ def draw_rectangle_r(position, radius, fill=None, outline=None):
 
 def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None):
     radius = 5
+    margin_left_text = 12
+    margin_top_text = 7
     draw_rectangle_r(
         [pos[0], pos[1], pos[0] + width, pos[1] + height],
         radius,
         fill=(fill if selected else colorGrayL1),
         outline=outline,
     )
-    draw_text((pos[0] + 12, pos[1] + 9), text)
+    draw_text((pos[0] + margin_left_text, pos[1] + margin_top_text), text)
 
 
 def draw_circle(position, radius, fill=None, outline="white"):
@@ -140,7 +144,9 @@ def button_circle(pos, button, text, color=colorViolet):
     label_margin_l = 20
     draw_circle(pos, radius, fill=color, outline=None)
     draw_text((pos[0] + btn_text_offset, pos[1] + btn_text_offset), button, anchor="mm")
-    draw_text((pos[0] + label_margin_l, pos[1] + btn_text_offset ), text, font=15, anchor="lm")
+    draw_text(
+        (pos[0] + label_margin_l, pos[1] + btn_text_offset), text, font=15, anchor="lm"
+    )
 
 
 def draw_log(
@@ -328,37 +334,24 @@ def draw_roms_list(
         )
 
 
-def draw_start_menu(option_selected_position, options, fill=colorViolet):
-    pos = [screen_width / 3, screen_height / 3]
-    padding = 5
-    width = 200
-    n_options = len(options)
-    option_height = 32
-    option_height_with_gap = 35
-    magic_number = 3  # Can't explain why this is needed, but it is
+def draw_menu_background(
+    pos, width, n_options, option_height, gap, padding, extra_top_offset=0, extra_bottom_offset=0
+):
     draw_rectangle_r(
         [
-            pos[0],
+            pos[0] - extra_top_offset,
             pos[1],
             pos[0] + width + padding * 2,
-            n_options * option_height_with_gap + padding * 2 + pos[1] - magic_number,
+            pos[1]
+            + n_options * (option_height + gap)
+            + padding * 2
+            - gap
+            + extra_bottom_offset,
         ],
         5,
         fill=colorGrayD2,
         outline=colorViolet,
     )
-    start_idx = int(option_selected_position / n_options) * n_options
-    end_idx = start_idx + n_options
-    for i, option in enumerate(options[start_idx:end_idx]):
-        is_selected = i == (option_selected_position % n_options)
-        row_list(
-            option[0],
-            (pos[0] + padding, pos[1] + padding + (i * option_height_with_gap)),
-            width,
-            option_height,
-            is_selected,
-            fill=fill,
-        )
 
 
 draw_start()

@@ -35,10 +35,13 @@ class RomM:
             for name, value in StartMenuOptions.__dict__.items()
             if not name.startswith("__")
         ]
+        self.start_menu_selected_position = 0
+        self.contextual_menu = False
+        self.contextual_menu_options = []
+        self.coontextual_menu_selected_position = 0
         self.platforms_selected_position = 0
         self.collections_selected_position = 0
         self.roms_selected_position = 0
-        self.start_menu_selected_position = 0
         self.multi_selected_roms = []
         self.platforms = []
         self.platforms_ready = threading.Event()
@@ -159,10 +162,10 @@ class RomM:
             time.sleep(2)
             self.valid_credentials = True
         else:
-            ui.button_circle((30, 460), "A", "Select", color=ui.colorRed)
-            ui.button_circle((133, 460), "Y", "Refresh", color=ui.colorGreen)
+            ui.button_circle((20, 460), "A", "Select", color=ui.colorRed)
+            ui.button_circle((123, 460), "Y", "Refresh", color=ui.colorGreen)
             ui.button_circle(
-                (243, 460),
+                (233, 460),
                 "X",
                 ("Collections" if self.current_view == View.PLATFORMS else "Platforms"),
                 color=ui.colorBlue,
@@ -184,6 +187,14 @@ class RomM:
             self.input.reset_input()
         elif self.input.key("X"):
             self.current_view = View.COLLECTIONS
+            self.input.reset_input()
+        elif self.input.key("START"):
+            self.contextual_menu = not self.contextual_menu
+            if self.contextual_menu:
+                self.contextual_menu_options = [
+                    (f"{ui.glyphs.about} Platform info", 0),
+                    (f"{ui.glyphs.download} Download", 1),
+                ]
             self.input.reset_input()
         else:
             self.platforms_selected_position = self.input.handle_navigation(
@@ -225,10 +236,10 @@ class RomM:
             time.sleep(2)
             self.valid_credentials = True
         else:
-            ui.button_circle((30, 460), "A", "Select", color=ui.colorRed)
-            ui.button_circle((133, 460), "Y", "Refresh", color=ui.colorGreen)
+            ui.button_circle((20, 460), "A", "Select", color=ui.colorRed)
+            ui.button_circle((123, 460), "Y", "Refresh", color=ui.colorGreen)
             ui.button_circle(
-                (243, 460),
+                (233, 460),
                 "X",
                 ("Collections" if self.current_view == View.PLATFORMS else "Platforms"),
                 color=ui.colorBlue,
@@ -250,6 +261,14 @@ class RomM:
             self.input.reset_input()
         elif self.input.key("X"):
             self.current_view = View.PLATFORMS
+            self.input.reset_input()
+        elif self.input.key("START"):
+            self.contextual_menu = not self.contextual_menu
+            if self.contextual_menu:
+                self.contextual_menu_options = [
+                    (f"{ui.glyphs.about} Collection info", 0),
+                    (f"{ui.glyphs.download} Download", 1),
+                ]
             self.input.reset_input()
         else:
             self.collections_selected_position = self.input.handle_navigation(
@@ -305,11 +324,11 @@ class RomM:
             time.sleep(2)
             self.valid_credentials = True
         else:
-            ui.button_circle((30, 460), "A", "Download", color=ui.colorRed)
-            ui.button_circle((145, 460), "B", "Back", color=ui.colorYellow)
-            ui.button_circle((225, 460), "Y", "Refresh", color=ui.colorGreen)
+            ui.button_circle((20, 460), "A", "Download", color=ui.colorRed)
+            ui.button_circle((135, 460), "B", "Back", color=ui.colorYellow)
+            ui.button_circle((215, 460), "Y", "Refresh", color=ui.colorGreen)
             ui.button_circle(
-                (330, 460), "X", f"SD: {self.fs.get_sd_storage()}", color=ui.colorBlue
+                (320, 460), "X", f"SD: {self.fs.get_sd_storage()}", color=ui.colorBlue
             )
 
     def _update_roms_view(self):
@@ -366,9 +385,59 @@ class RomM:
                         self.roms[self.roms_selected_position]
                     )
             self.input.reset_input()
+        elif self.input.key("START"):
+            self.contextual_menu = not self.contextual_menu
+            if self.contextual_menu:
+                self.contextual_menu_options = [
+                    (f"{ui.glyphs.about} Rom info", 0),
+                    (f"{ui.glyphs.download} Download", 1),
+                    (f"{ui.glyphs.delete} Delete from device", 2),
+                ]
+            self.input.reset_input()
         else:
             self.roms_selected_position = self.input.handle_navigation(
                 self.roms_selected_position, self.max_n_roms, len(self.roms)
+            )
+
+    def _render_contextual_menu(self):
+        pos = [ui.screen_width / 3, ui.screen_height / 3]
+        padding = 5
+        width = 200
+        n_options = len(self.contextual_menu_options)
+        option_height = 32
+        gap = 3
+        if self.current_view == View.PLATFORMS:
+            ui.draw_menu_background(pos, width, n_options, option_height, gap, padding, extra_top_offset=option_height)
+        elif self.current_view == View.COLLECTIONS:
+            ui.draw_menu_background(pos, width, n_options, option_height, gap, padding)
+        elif self.current_view == View.ROMS:
+            ui.draw_menu_background(pos, width, n_options, option_height, gap, padding)
+        else:
+            ui.draw_menu_background(pos, width, n_options, option_height, gap, padding)
+        start_idx = int(self.coontextual_menu_selected_position / n_options) * n_options
+        end_idx = start_idx + n_options
+        for i, option in enumerate(self.contextual_menu_options[start_idx:end_idx]):
+            is_selected = i == (self.coontextual_menu_selected_position % n_options)
+            ui.row_list(
+                option[0],
+                (pos[0] + padding, pos[1] + padding + (i * (option_height + gap))),
+                width,
+                option_height,
+                is_selected,
+            )
+
+    def _update_contextual_menu(self):
+        if self.input.key("A"):
+            pass
+            self.input.reset_input()
+        elif self.input.key("B"):
+            self.contextual_menu = not self.contextual_menu
+            self.input.reset_input()
+        else:
+            self.coontextual_menu_selected_position = self.input.handle_navigation(
+                self.coontextual_menu_selected_position,
+                len(self.contextual_menu_options),
+                len(self.contextual_menu_options),
             )
 
     def _render_start_menu(self):
@@ -377,22 +446,17 @@ class RomM:
         width = 200
         n_options = len(self.start_menu_options)
         option_height = 32
-        option_height_with_gap = 35
+        gap = 3
         version_x_adjustement = 50
-        version_height = 24
-        ui.draw_rectangle_r(
-            [
-                pos[0],
-                pos[1],
-                pos[0] + width + padding * 2,
-                n_options * option_height_with_gap
-                + padding * 2
-                + pos[1]
-                + version_height,
-            ],
-            5,
-            fill=ui.colorGrayD2,
-            outline=ui.colorViolet,
+        version_height = 20
+        ui.draw_menu_background(
+            pos,
+            width,
+            n_options,
+            option_height,
+            gap,
+            padding,
+            extra_bottom_offset=version_height,
         )
         start_idx = int(self.start_menu_selected_position / n_options) * n_options
         end_idx = start_idx + n_options
@@ -400,7 +464,7 @@ class RomM:
             is_selected = i == (self.start_menu_selected_position % n_options)
             ui.row_list(
                 option[0],
-                (pos[0] + padding, pos[1] + padding + (i * option_height_with_gap)),
+                (pos[0] + padding, pos[1] + padding + (i * (option_height + gap))),
                 width,
                 option_height,
                 is_selected,
@@ -410,8 +474,7 @@ class RomM:
                 pos[0] + width - version_x_adjustement,
                 pos[1]
                 + padding
-                + padding
-                + len(self.start_menu_options) * option_height_with_gap,
+                + len(self.start_menu_options) * (option_height + gap)
             ),
             f"v{version}",
         )
@@ -434,8 +497,11 @@ class RomM:
             )
 
     def _update_common(self):
-        if self.input.key("MENUF"):
+        if self.input.key("MENUF") and not self.contextual_menu:
             self.start_menu = not self.start_menu
+            self.input.reset_input()
+        if self.input.key("START") and not self.start_menu:
+            self.contextual_menu = not self.contextual_menu
             self.input.reset_input()
 
     def start(self):
@@ -457,19 +523,19 @@ class RomM:
             if self.valid_credentials:
                 if self.current_view == View.PLATFORMS:
                     self._render_platforms_view()
-                    if not self.start_menu:
+                    if not self.start_menu and not self.contextual_menu:
                         self._update_platforms_view()
                 elif self.current_view == View.COLLECTIONS:
                     self._render_collections_view()
-                    if not self.start_menu:
+                    if not self.start_menu and not self.contextual_menu:
                         self._update_collections_view()
                 elif self.current_view == View.ROMS:
                     self._render_roms_view()
-                    if not self.start_menu:
+                    if not self.start_menu and not self.contextual_menu:
                         self._update_roms_view()
                 else:
                     self._render_platforms_view()
-                    if not self.start_menu:
+                    if not self.start_menu and not self.contextual_menu:
                         self._update_platforms_view()
             else:
                 ui.draw_text(
@@ -489,6 +555,9 @@ class RomM:
         if self.start_menu:
             self._render_start_menu()
             self._update_start_menu()
+        elif self.contextual_menu:
+            self._render_contextual_menu()
+            self._update_contextual_menu()
 
         self._update_common()
 
