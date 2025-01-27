@@ -44,7 +44,9 @@ class RomM:
             ui.draw_log(
                 text_line_1=f"{next(ui.glyphs.spinner)} Fetching platforms", wait=0.1
             )
-        elif not self.status.download_rom_ready.is_set() and self.status.downloading_rom:
+        elif (
+            not self.status.download_rom_ready.is_set() and self.status.downloading_rom
+        ):
             ui.draw_loader(self.status.downloaded_percent)
             ui.draw_log(
                 text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {ui.glyphs.download} {self.status.downloading_rom.name}",
@@ -127,7 +129,9 @@ class RomM:
             ui.draw_log(
                 text_line_1=f"{next(ui.glyphs.spinner)} Fetching collections", wait=0.1
             )
-        elif not self.status.download_rom_ready.is_set() and self.status.downloading_rom:
+        elif (
+            not self.status.download_rom_ready.is_set() and self.status.downloading_rom
+        ):
             ui.draw_loader(self.status.downloaded_percent)
             ui.draw_log(
                 text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {ui.glyphs.download} {self.status.downloading_rom.name}",
@@ -182,8 +186,14 @@ class RomM:
             self.status.show_contextual_menu = not self.status.show_contextual_menu
             if self.status.show_contextual_menu:
                 self.contextual_menu_options = [
-                    (f"{ui.glyphs.about} Collection info", 0),
-                    (f"{ui.glyphs.download} Download", 1),
+                    (
+                        f"{ui.glyphs.about} Collection info",
+                        0,
+                        lambda: ui.draw_log(
+                            text_line_1=f"Collection name: {self.status.collections[self.collections_selected_position].name}",
+                            wait=2,
+                        ),
+                    ),
                 ]
             self.input.reset_input()
         else:
@@ -195,11 +205,15 @@ class RomM:
 
     def _render_roms_view(self):
         if self.status.selected_platform:
-            header_text = self.status.platforms[self.platforms_selected_position].display_name
+            header_text = self.status.platforms[
+                self.platforms_selected_position
+            ].display_name
             header_color = ui.colorViolet
             prepend_platform_slug = False
         elif self.status.selected_collection:
-            header_text = self.status.collections[self.collections_selected_position].name
+            header_text = self.status.collections[
+                self.collections_selected_position
+            ].name
             header_color = ui.colorYellow
             prepend_platform_slug = True
         total_pages = (len(self.status.roms) + self.max_n_roms - 1) // self.max_n_roms
@@ -212,13 +226,15 @@ class RomM:
             header_text,
             header_color,
             self.status.multi_selected_roms,
-            prepend_platform_slug=prepend_platform_slug
+            prepend_platform_slug=prepend_platform_slug,
         )
         if not self.status.roms_ready.is_set():
             ui.draw_log(
                 text_line_1=f"{next(ui.glyphs.spinner)} Fetching roms", wait=0.1
             )
-        elif not self.status.download_rom_ready.is_set() and self.status.downloading_rom:
+        elif (
+            not self.status.download_rom_ready.is_set() and self.status.downloading_rom
+        ):
             ui.draw_loader(self.status.downloaded_percent)
             ui.draw_log(
                 text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {ui.glyphs.download} {self.status.downloading_rom.name}",
@@ -382,6 +398,8 @@ class RomM:
         n_options = len(self.start_menu_options)
         option_height = 32
         gap = 3
+        title = "Main menu"
+        title_x_adjustement = 35
         version_x_adjustement = 50
         version_height = 20
         ui.draw_menu_background(
@@ -391,6 +409,7 @@ class RomM:
             option_height,
             gap,
             padding,
+            extra_top_offset=version_height,
             extra_bottom_offset=version_height,
         )
         start_idx = int(self.start_menu_selected_position / n_options) * n_options
@@ -411,6 +430,14 @@ class RomM:
             ),
             f"v{version}",
         )
+        # pos[0] + padding + gap,
+        ui.draw_text(
+            (
+                pos[0] + width / 2 - title_x_adjustement,
+                pos[1] - option_height + version_height - padding,
+            ),
+            title,
+        )
 
     def _update_start_menu(self):
         if self.input.key("A"):
@@ -422,6 +449,7 @@ class RomM:
                     ui.draw_log(
                         text_line_1=f"Error: Couldn't find path {self.fs.get_sd2_storage_path()}",
                         text_color=ui.colorRed,
+                        wait=2,
                     )
                 else:
                     ui.draw_log(
