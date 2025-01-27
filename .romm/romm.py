@@ -17,7 +17,8 @@ class View:
 
 
 class StartMenuOptions:
-    EXIT = (f"{ui.glyphs.exit} Exit", 0)
+    SD_SWITCH = (f"{ui.glyphs.microsd} Switch SD", 0)
+    EXIT = (f"{ui.glyphs.exit} Exit", 1)
 
 
 class RomM:
@@ -29,16 +30,16 @@ class RomM:
         self.valid_credentials = True
         self.current_view = View.PLATFORMS
         self.previows_view = View.PLATFORMS
-        self.start_menu = False
+        self.show_start_menu = False
         self.start_menu_options = [
             value
             for name, value in StartMenuOptions.__dict__.items()
             if not name.startswith("__")
         ]
         self.start_menu_selected_position = 0
-        self.contextual_menu = False
+        self.show_contextual_menu = False
         self.contextual_menu_options = []
-        self.coontextual_menu_selected_position = 0
+        self.contextual_menu_selected_position = 0
         self.platforms_selected_position = 0
         self.collections_selected_position = 0
         self.roms_selected_position = 0
@@ -189,8 +190,8 @@ class RomM:
             self.current_view = View.COLLECTIONS
             self.input.reset_input()
         elif self.input.key("START"):
-            self.contextual_menu = not self.contextual_menu
-            if self.contextual_menu:
+            self.show_contextual_menu = not self.show_contextual_menu
+            if self.show_contextual_menu:
                 self.contextual_menu_options = [
                     (f"{ui.glyphs.about} Platform info", 0),
                     (f"{ui.glyphs.download} Download", 1),
@@ -263,8 +264,8 @@ class RomM:
             self.current_view = View.PLATFORMS
             self.input.reset_input()
         elif self.input.key("START"):
-            self.contextual_menu = not self.contextual_menu
-            if self.contextual_menu:
+            self.show_contextual_menu = not self.show_contextual_menu
+            if self.show_contextual_menu:
                 self.contextual_menu_options = [
                     (f"{ui.glyphs.about} Collection info", 0),
                     (f"{ui.glyphs.download} Download", 1),
@@ -327,9 +328,6 @@ class RomM:
             ui.button_circle((20, 460), "A", "Download", color=ui.colorRed)
             ui.button_circle((135, 460), "B", "Back", color=ui.colorYellow)
             ui.button_circle((215, 460), "Y", "Refresh", color=ui.colorGreen)
-            ui.button_circle(
-                (320, 460), "X", f"SD: {self.fs.get_sd_storage()}", color=ui.colorBlue
-            )
 
     def _update_roms_view(self):
         if self.input.key("A"):
@@ -355,22 +353,6 @@ class RomM:
                 threading.Thread(target=self._fetch_roms).start()
                 self.multi_selected_roms = []
             self.input.reset_input()
-        elif self.input.key("X"):
-            current = self.fs.get_sd_storage()
-            self.fs.switch_sd_storage()
-            new = self.fs.get_sd_storage()
-            if new == current:
-                ui.draw_log(
-                    text_line_1=f"Error: Couldn't find path {self.fs.get_sd2_storage_path()}",
-                    text_color=ui.colorRed,
-                )
-            else:
-                ui.draw_log(
-                    text_line_1=f"Set download path to SD {self.fs.get_sd_storage()}: {self.fs.get_sd_storage_platform_path(self.roms[self.roms_selected_position].platform_slug)}",
-                    text_color=ui.colorGreen,
-                )
-            time.sleep(2)
-            self.input.reset_input()
         elif self.input.key("SELECT"):
             if self.download_rom_ready.is_set():
                 if (
@@ -386,12 +368,28 @@ class RomM:
                     )
             self.input.reset_input()
         elif self.input.key("START"):
-            self.contextual_menu = not self.contextual_menu
-            if self.contextual_menu:
+            self.show_contextual_menu = not self.show_contextual_menu
+            if self.show_contextual_menu:
                 self.contextual_menu_options = [
-                    (f"{ui.glyphs.about} Rom info", 0),
-                    (f"{ui.glyphs.download} Download", 1),
-                    (f"{ui.glyphs.delete} Delete from device", 2),
+                    (
+                        f"{ui.glyphs.about} Rom info",
+                        0,
+                        lambda: ui.draw_log(
+                            text_line_1=f"Rom name: {self.roms[self.roms_selected_position].name}"
+                        ),
+                    ),
+                    (
+                        f"{ui.glyphs.delete} Remove from device",
+                        2,
+                        lambda: os.remove(
+                            os.path.join(
+                                self.fs.get_sd_storage_platform_path(
+                                    self.roms[self.roms_selected_position].platform_slug
+                                ),
+                                self.roms[self.roms_selected_position].file_name,
+                            )
+                        ),
+                    ),
                 ]
             self.input.reset_input()
         else:
@@ -407,17 +405,24 @@ class RomM:
         option_height = 32
         gap = 3
         if self.current_view == View.PLATFORMS:
-            ui.draw_menu_background(pos, width, n_options, option_height, gap, padding, extra_top_offset=option_height)
+            ui.draw_menu_background(
+                pos,
+                width,
+                n_options,
+                option_height,
+                gap,
+                padding,
+            )
         elif self.current_view == View.COLLECTIONS:
             ui.draw_menu_background(pos, width, n_options, option_height, gap, padding)
         elif self.current_view == View.ROMS:
             ui.draw_menu_background(pos, width, n_options, option_height, gap, padding)
         else:
             ui.draw_menu_background(pos, width, n_options, option_height, gap, padding)
-        start_idx = int(self.coontextual_menu_selected_position / n_options) * n_options
+        start_idx = int(self.contextual_menu_selected_position / n_options) * n_options
         end_idx = start_idx + n_options
         for i, option in enumerate(self.contextual_menu_options[start_idx:end_idx]):
-            is_selected = i == (self.coontextual_menu_selected_position % n_options)
+            is_selected = i == (self.contextual_menu_selected_position % n_options)
             ui.row_list(
                 option[0],
                 (pos[0] + padding, pos[1] + padding + (i * (option_height + gap))),
@@ -428,14 +433,15 @@ class RomM:
 
     def _update_contextual_menu(self):
         if self.input.key("A"):
-            pass
+            self.contextual_menu_options[self.contextual_menu_selected_position][2]()
+            self.show_contextual_menu = False
             self.input.reset_input()
         elif self.input.key("B"):
-            self.contextual_menu = not self.contextual_menu
+            self.show_contextual_menu = not self.show_contextual_menu
             self.input.reset_input()
         else:
-            self.coontextual_menu_selected_position = self.input.handle_navigation(
-                self.coontextual_menu_selected_position,
+            self.contextual_menu_selected_position = self.input.handle_navigation(
+                self.contextual_menu_selected_position,
                 len(self.contextual_menu_options),
                 len(self.contextual_menu_options),
             )
@@ -472,22 +478,34 @@ class RomM:
         ui.draw_text(
             (
                 pos[0] + width - version_x_adjustement,
-                pos[1]
-                + padding
-                + len(self.start_menu_options) * (option_height + gap)
+                pos[1] + padding + len(self.start_menu_options) * (option_height + gap),
             ),
             f"v{version}",
         )
 
     def _update_start_menu(self):
         if self.input.key("A"):
-            if self.start_menu_selected_position == StartMenuOptions.EXIT[1]:
+            if self.start_menu_selected_position == StartMenuOptions.SD_SWITCH[1]:
+                current = self.fs.get_sd_storage()
+                self.fs.switch_sd_storage()
+                new = self.fs.get_sd_storage()
+                if new == current:
+                    ui.draw_log(
+                        text_line_1=f"Error: Couldn't find path {self.fs.get_sd2_storage_path()}",
+                        text_color=ui.colorRed,
+                    )
+                else:
+                    ui.draw_log(
+                        text_line_1=f"Set download path to SD {self.fs.get_sd_storage()}: {self.fs.get_sd_storage_path()}",
+                        text_color=ui.colorGreen,
+                    )
+                time.sleep(2)
+                self.input.reset_input()
+            elif self.start_menu_selected_position == StartMenuOptions.EXIT[1]:
                 ui.draw_end()
                 sys.exit()
-            elif self.start_menu_selected_position == StartMenuOptions.ABOUT[1]:
-                self.input.reset_input()
         elif self.input.key("B"):
-            self.start_menu = not self.start_menu
+            self.show_start_menu = not self.show_start_menu
             self.input.reset_input()
         else:
             self.start_menu_selected_position = self.input.handle_navigation(
@@ -497,11 +515,11 @@ class RomM:
             )
 
     def _update_common(self):
-        if self.input.key("MENUF") and not self.contextual_menu:
-            self.start_menu = not self.start_menu
+        if self.input.key("MENUF") and not self.show_contextual_menu:
+            self.show_start_menu = not self.show_start_menu
             self.input.reset_input()
-        if self.input.key("START") and not self.start_menu:
-            self.contextual_menu = not self.contextual_menu
+        if self.input.key("START") and not self.show_start_menu:
+            self.show_contextual_menu = not self.show_contextual_menu
             self.input.reset_input()
 
     def start(self):
@@ -523,19 +541,19 @@ class RomM:
             if self.valid_credentials:
                 if self.current_view == View.PLATFORMS:
                     self._render_platforms_view()
-                    if not self.start_menu and not self.contextual_menu:
+                    if not self.show_start_menu and not self.show_contextual_menu:
                         self._update_platforms_view()
                 elif self.current_view == View.COLLECTIONS:
                     self._render_collections_view()
-                    if not self.start_menu and not self.contextual_menu:
+                    if not self.show_start_menu and not self.show_contextual_menu:
                         self._update_collections_view()
                 elif self.current_view == View.ROMS:
                     self._render_roms_view()
-                    if not self.start_menu and not self.contextual_menu:
+                    if not self.show_start_menu and not self.show_contextual_menu:
                         self._update_roms_view()
                 else:
                     self._render_platforms_view()
-                    if not self.start_menu and not self.contextual_menu:
+                    if not self.show_start_menu and not self.show_contextual_menu:
                         self._update_platforms_view()
             else:
                 ui.draw_text(
@@ -552,10 +570,10 @@ class RomM:
                 anchor="mm",
             )
         # Render start menu
-        if self.start_menu:
+        if self.show_start_menu:
             self._render_start_menu()
             self._update_start_menu()
-        elif self.contextual_menu:
+        elif self.show_contextual_menu:
             self._render_contextual_menu()
             self._update_contextual_menu()
 

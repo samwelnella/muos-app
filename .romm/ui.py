@@ -28,20 +28,22 @@ glyphs = namedtuple(
         "checkbox",
         "checkbox_selected",
         "about",
+        "microsd",
         "delete",
         "exit",
     ],
 )(
-    host="\uf01b",
-    user="\uf007",
-    download="\uf019",
-    spinner=itertools.cycle(["\uf01e", "\uf01f", "\uf020", "\uf021"]),
-    checkbox="\uf01c",
-    checkbox_selected="\uf01d",
-    cloud_sync="\uf01a",
-    about="\uf05a",
-    delete="\uf018",
-    exit="\uf2d3",
+    host="\uf000",
+    user="\uf001",
+    download="\uf00b",
+    spinner=itertools.cycle(["\uf004", "\uf005", "\uf006", "\uf007"]),
+    checkbox="\uf002",
+    checkbox_selected="\uf003",
+    cloud_sync="\uf00a",
+    about="\uf008",
+    microsd="\uf009",
+    delete="\uf00d",
+    exit="\uf00c",
 )
 
 colorViolet = "#ad3c6b"
@@ -162,7 +164,7 @@ def draw_log(
     radius_bg = 5
     max_len_text = 65
     margin_text = 15
-    margin_text_bottom = 28
+    margin_text_bottom = 30
     margin_text_bottom_multiline_line_1 = 38
     margin_text_bottom_multiline_line_2 = 21
     if background:
@@ -234,7 +236,7 @@ def draw_header(host, username):
 
     draw_text(
         (pos_text[0], pos_text[1]),
-        f"{glyphs.host} {host} | {glyphs.user} {username}",
+        f"{glyphs.host} {host} | {glyphs.user} {username} | {glyphs.microsd} {fs.get_sd_storage()}",
     )
 
 
@@ -339,8 +341,8 @@ def draw_menu_background(
 ):
     draw_rectangle_r(
         [
-            pos[0] - extra_top_offset,
-            pos[1],
+            pos[0],
+            pos[1] - extra_top_offset,
             pos[0] + width + padding * 2,
             pos[1]
             + n_options * (option_height + gap)
