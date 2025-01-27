@@ -267,6 +267,9 @@ class RomM:
         header_color = (
             ui.colorViolet if self.previows_view == View.PLATFORMS else ui.colorYellow
         )
+        total_pages = (len(self.roms) + self.max_n_roms - 1) // self.max_n_roms
+        current_page = (self.roms_selected_position // self.max_n_roms) + 1
+        header_text += f" [{current_page}/{total_pages}]"
         ui.draw_roms_list(
             self.roms_selected_position,
             self.max_n_roms,
@@ -431,7 +434,7 @@ class RomM:
             )
 
     def _update_common(self):
-        if self.input.key("START"):
+        if self.input.key("MENUF"):
             self.start_menu = not self.start_menu
             self.input.reset_input()
 

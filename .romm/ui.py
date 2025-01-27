@@ -140,7 +140,7 @@ def button_circle(pos, button, text, color=colorViolet):
     label_margin_l = 20
     draw_circle(pos, radius, fill=color, outline=None)
     draw_text((pos[0] + btn_text_offset, pos[1] + btn_text_offset), button, anchor="mm")
-    draw_text((pos[0] + label_margin_l, pos[1]), text, font=15, anchor="lm")
+    draw_text((pos[0] + label_margin_l, pos[1] + btn_text_offset ), text, font=15, anchor="lm")
 
 
 def draw_log(
@@ -219,7 +219,7 @@ def draw_loader(percent):
 
 
 def draw_header(host, username):
-    pos_text = [55, 10]
+    pos_text = [55, 9]
     logo = Image.open("resources/romm.png")
     pos_logo = [15, 7]
     activeImage.paste(
