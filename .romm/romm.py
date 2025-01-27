@@ -1,271 +1,186 @@
 import sys
-import time
 import threading
 import os
 
 import ui
-from filesystem.filesystem import Filesystem
-from api.api import API
+from filesystem import Filesystem
+from api import API
 from input import Input
+from status import Status, View, StartMenuOptions
 from __version__ import version
-
-
-class View:
-    PLATFORMS = "platform"
-    COLLECTIONS = "collection"
-    ROMS = "roms"
-
-
-class StartMenuOptions:
-    SD_SWITCH = (f"{ui.glyphs.microsd} Switch SD", 0)
-    EXIT = (f"{ui.glyphs.exit} Exit", 1)
 
 
 class RomM:
     def __init__(self):
-        self.romm_provider = API()
+        self.api = API()
         self.fs = Filesystem()
         self.input = Input()
-        self.valid_host = True
-        self.valid_credentials = True
-        self.current_view = View.PLATFORMS
-        self.previows_view = View.PLATFORMS
-        self.show_start_menu = False
+        self.status = Status()
+
         self.start_menu_options = [
             value
             for name, value in StartMenuOptions.__dict__.items()
             if not name.startswith("__")
         ]
-        self.start_menu_selected_position = 0
-        self.show_contextual_menu = False
         self.contextual_menu_options = []
+
+        self.start_menu_selected_position = 0
         self.contextual_menu_selected_position = 0
         self.platforms_selected_position = 0
         self.collections_selected_position = 0
         self.roms_selected_position = 0
-        self.multi_selected_roms = []
-        self.platforms = []
-        self.platforms_ready = threading.Event()
-        self.collections = []
-        self.collections_ready = threading.Event()
-        self.roms = []
-        self.roms_ready = threading.Event()
-        self.download_queue = []
-        self.downloading_rom = None
-        self.downloaded_rom_bytes_progress = 0
-        self.downloaded_percent = 0
-        self.downloading_rom_position = 0
-        self.download_rom_ready = threading.Event()
+
         self.max_n_platforms = 11
         self.max_n_collections = 11
         self.max_n_roms = 10
-
-    def _fetch_platforms(self):
-        self.platforms, self.valid_host, self.valid_credentials = (
-            self.romm_provider.get_platforms()
-        )
-        self.platforms_ready.set()
-
-    def _fetch_collections(self):
-        self.collections, self.valid_host, self.valid_credentials = (
-            self.romm_provider.get_collections()
-        )
-        self.collections_ready.set()
-
-    def _fetch_roms(self):
-        if self.current_view != View.ROMS:
-            self.roms, self.valid_host, self.valid_credentials = (
-                self.romm_provider.get_roms(
-                    (
-                        self.current_view
-                        if self.current_view != View.ROMS
-                        else self.previows_view
-                    ),
-                    (
-                        self.platforms[self.platforms_selected_position].id
-                        if self.current_view == View.PLATFORMS
-                        else self.collections[self.collections_selected_position].id
-                    ),
-                )
-            )
-        else:
-            self.roms, self.valid_host, self.valid_credentials = (
-                self.romm_provider.get_roms(
-                    self.previows_view,
-                    (
-                        self.platforms[self.platforms_selected_position].id
-                        if self.previows_view == View.PLATFORMS
-                        else self.collections[self.collections_selected_position].id
-                    ),
-                )
-            )
-        self.roms_ready.set()
-
-    def _download_roms(self):
-        self.download_queue.sort(key=lambda rom: rom.name)
-        for i, rom in enumerate(self.download_queue):
-            self.downloading_rom = rom
-            self.downloading_rom_position = i + 1
-            dest_path = os.path.join(
-                self.fs.get_sd_storage_platform_path(rom.platform_slug),
-                rom.file_name,
-            )
-            for (
-                current_downloaded_bytes,
-                valid_host,
-                valid_credentials,
-            ) in self.romm_provider.download_rom(self.downloading_rom, dest_path):
-                if not valid_host or not valid_credentials:
-                    self.valid_host = valid_host
-                    self.valid_credentials = valid_credentials
-                    break
-                self.downloaded_rom_bytes_progress = current_downloaded_bytes
-                self.downloaded_percent = (
-                    self.downloaded_rom_bytes_progress
-                    / self.downloading_rom.file_size_bytes
-                ) * 100
-            self.downloaded_percent = 0
-            self.downloaded_rom_bytes_progress = 0
-        self.downloading_rom = None
-        self.multi_selected_roms = []
-        self.download_queue = []
-        self.download_rom_ready.set()
 
     def _render_platforms_view(self):
         ui.draw_platforms_list(
             self.platforms_selected_position,
             self.max_n_platforms,
-            self.platforms,
+            self.status.platforms,
         )
-        if not self.platforms_ready.is_set():
-            ui.draw_log(text_line_1=f"{next(ui.glyphs.spinner)} Fetching platforms")
-            time.sleep(0.1)
-        elif not self.download_rom_ready.is_set() and self.downloading_rom:
-            ui.draw_loader(self.downloaded_percent)
+        if not self.status.platforms_ready.is_set():
             ui.draw_log(
-                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | {ui.glyphs.download} {self.downloading_rom.name}",
-                text_line_2=f"({self.downloading_rom.file_name})",
+                text_line_1=f"{next(ui.glyphs.spinner)} Fetching platforms", wait=0.1
+            )
+        elif not self.status.download_rom_ready.is_set() and self.status.downloading_rom:
+            ui.draw_loader(self.status.downloaded_percent)
+            ui.draw_log(
+                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {ui.glyphs.download} {self.status.downloading_rom.name}",
+                text_line_2=f"({self.status.downloading_rom.file_name})",
                 background=False,
+                wait=0.1,
             )
-            time.sleep(0.1)
-        elif not self.valid_host:
+        elif not self.status.valid_host:
             ui.draw_log(
-                text_line_1="Error: Invalid host",
-                text_color=ui.colorRed,
+                text_line_1="Error: Invalid host", text_color=ui.colorRed, wait=2
             )
-            time.sleep(2)
-            self.valid_host = True
-        elif not self.valid_credentials:
+            self.status.valid_host = True
+        elif not self.status.valid_credentials:
             ui.draw_log(
-                text_line_1="Error: Permission denied",
-                text_color=ui.colorRed,
+                text_line_1="Error: Permission denied", text_color=ui.colorRed, wait=2
             )
-            time.sleep(2)
-            self.valid_credentials = True
+            self.status.valid_credentials = True
         else:
             ui.button_circle((20, 460), "A", "Select", color=ui.colorRed)
             ui.button_circle((123, 460), "Y", "Refresh", color=ui.colorGreen)
             ui.button_circle(
                 (233, 460),
                 "X",
-                ("Collections" if self.current_view == View.PLATFORMS else "Platforms"),
+                (
+                    "Collections"
+                    if self.status.current_view == View.PLATFORMS
+                    else "Platforms"
+                ),
                 color=ui.colorBlue,
             )
 
     def _update_platforms_view(self):
         if self.input.key("A"):
-            if self.roms_ready.is_set():
-                self.roms_ready.clear()
-                self.roms = []
-                self.previows_view = View.PLATFORMS
-                self.current_view = View.ROMS
-                threading.Thread(target=self._fetch_roms).start()
+            if self.status.roms_ready.is_set():
+                self.status.roms_ready.clear()
+                self.status.roms = []
+                self.status.selected_platform = self.status.platforms[
+                    self.platforms_selected_position
+                ]
+                self.status.current_view = View.ROMS
+                threading.Thread(target=self.api.fetch_roms).start()
             self.input.reset_input()
         elif self.input.key("Y"):
-            if self.platforms_ready.is_set():
-                self.platforms_ready.clear()
-                threading.Thread(target=self._fetch_platforms).start()
+            if self.status.platforms_ready.is_set():
+                self.status.platforms_ready.clear()
+                threading.Thread(target=self.api.fetch_platforms).start()
             self.input.reset_input()
         elif self.input.key("X"):
-            self.current_view = View.COLLECTIONS
+            self.status.current_view = View.COLLECTIONS
             self.input.reset_input()
         elif self.input.key("START"):
-            self.show_contextual_menu = not self.show_contextual_menu
-            if self.show_contextual_menu:
+            self.status.show_contextual_menu = not self.status.show_contextual_menu
+            if self.status.show_contextual_menu:
                 self.contextual_menu_options = [
-                    (f"{ui.glyphs.about} Platform info", 0),
-                    (f"{ui.glyphs.download} Download", 1),
+                    (
+                        f"{ui.glyphs.about} Platform info",
+                        0,
+                        lambda: ui.draw_log(
+                            text_line_1=f"Platform name: {self.status.platforms[self.platforms_selected_position].display_name}",
+                            wait=2,
+                        ),
+                    ),
                 ]
             self.input.reset_input()
         else:
             self.platforms_selected_position = self.input.handle_navigation(
                 self.platforms_selected_position,
                 self.max_n_platforms,
-                len(self.platforms),
+                len(self.status.platforms),
             )
 
     def _render_collections_view(self):
         ui.draw_collections_list(
             self.collections_selected_position,
             self.max_n_collections,
-            self.collections,
+            self.status.collections,
             fill=ui.colorYellow,
         )
-        if not self.collections_ready.is_set():
-            ui.draw_log(text_line_1=f"{next(ui.glyphs.spinner)} Fetching collections")
-            time.sleep(0.1)
-        elif not self.download_rom_ready.is_set() and self.downloading_rom:
-            ui.draw_loader(self.downloaded_percent)
+        if not self.status.collections_ready.is_set():
             ui.draw_log(
-                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | {ui.glyphs.download} {self.downloading_rom.name}",
-                text_line_2=f"({self.downloading_rom.file_name})",
+                text_line_1=f"{next(ui.glyphs.spinner)} Fetching collections", wait=0.1
+            )
+        elif not self.status.download_rom_ready.is_set() and self.status.downloading_rom:
+            ui.draw_loader(self.status.downloaded_percent)
+            ui.draw_log(
+                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {ui.glyphs.download} {self.status.downloading_rom.name}",
+                text_line_2=f"({self.status.downloading_rom.file_name})",
                 background=False,
+                wait=0.1,
             )
-            time.sleep(0.1)
-        elif not self.valid_host:
+        elif not self.status.valid_host:
             ui.draw_log(
-                text_line_1="Error: Invalid host",
-                text_color=ui.colorRed,
+                text_line_1="Error: Invalid host", text_color=ui.colorRed, wait=2
             )
-            time.sleep(2)
-            self.valid_host = True
-        elif not self.valid_credentials:
+            self.status.valid_host = True
+        elif not self.status.valid_credentials:
             ui.draw_log(
-                text_line_1="Error: Permission denied",
-                text_color=ui.colorRed,
+                text_line_1="Error: Permission denied", text_color=ui.colorRed, wait=0.1
             )
-            time.sleep(2)
-            self.valid_credentials = True
+            self.status.valid_credentials = True
         else:
             ui.button_circle((20, 460), "A", "Select", color=ui.colorRed)
             ui.button_circle((123, 460), "Y", "Refresh", color=ui.colorGreen)
             ui.button_circle(
                 (233, 460),
                 "X",
-                ("Collections" if self.current_view == View.PLATFORMS else "Platforms"),
+                (
+                    "Collections"
+                    if self.status.current_view == View.PLATFORMS
+                    else "Platforms"
+                ),
                 color=ui.colorBlue,
             )
 
     def _update_collections_view(self):
         if self.input.key("A"):
-            if self.roms_ready.is_set():
-                self.roms_ready.clear()
-                self.roms = []
-                self.previows_view = View.COLLECTIONS
-                self.current_view = View.ROMS
-                threading.Thread(target=self._fetch_roms).start()
+            if self.status.roms_ready.is_set():
+                self.status.roms_ready.clear()
+                self.status.roms = []
+                self.status.selected_collection = self.status.collections[
+                    self.collections_selected_position
+                ]
+                self.status.current_view = View.ROMS
+                threading.Thread(target=self.api.fetch_roms).start()
             self.input.reset_input()
         elif self.input.key("Y"):
-            if self.collections_ready.is_set():
-                self.collections_ready.clear()
-                threading.Thread(target=self._fetch_collections).start()
+            if self.status.collections_ready.is_set():
+                self.status.collections_ready.clear()
+                threading.Thread(target=self.api.fetch_collections).start()
             self.input.reset_input()
         elif self.input.key("X"):
-            self.current_view = View.PLATFORMS
+            self.status.current_view = View.PLATFORMS
             self.input.reset_input()
         elif self.input.key("START"):
-            self.show_contextual_menu = not self.show_contextual_menu
-            if self.show_contextual_menu:
+            self.status.show_contextual_menu = not self.status.show_contextual_menu
+            if self.status.show_contextual_menu:
                 self.contextual_menu_options = [
                     (f"{ui.glyphs.about} Collection info", 0),
                     (f"{ui.glyphs.download} Download", 1),
@@ -275,118 +190,132 @@ class RomM:
             self.collections_selected_position = self.input.handle_navigation(
                 self.collections_selected_position,
                 self.max_n_collections,
-                len(self.collections),
+                len(self.status.collections),
             )
 
     def _render_roms_view(self):
-        header_text = (
-            self.platforms[self.platforms_selected_position].display_name
-            if self.previows_view == View.PLATFORMS
-            else self.collections[self.collections_selected_position].name
-        )
-        header_color = (
-            ui.colorViolet if self.previows_view == View.PLATFORMS else ui.colorYellow
-        )
-        total_pages = (len(self.roms) + self.max_n_roms - 1) // self.max_n_roms
+        if self.status.selected_platform:
+            header_text = self.status.platforms[self.platforms_selected_position].display_name
+            header_color = ui.colorViolet
+            prepend_platform_slug = False
+        elif self.status.selected_collection:
+            header_text = self.status.collections[self.collections_selected_position].name
+            header_color = ui.colorYellow
+            prepend_platform_slug = True
+        total_pages = (len(self.status.roms) + self.max_n_roms - 1) // self.max_n_roms
         current_page = (self.roms_selected_position // self.max_n_roms) + 1
         header_text += f" [{current_page}/{total_pages}]"
         ui.draw_roms_list(
             self.roms_selected_position,
             self.max_n_roms,
-            self.roms,
+            self.status.roms,
             header_text,
             header_color,
-            self.multi_selected_roms,
-            prepend_platform_slug=self.previows_view == View.COLLECTIONS,
+            self.status.multi_selected_roms,
+            prepend_platform_slug=prepend_platform_slug
         )
-        if not self.roms_ready.is_set():
-            ui.draw_log(text_line_1=f"{next(ui.glyphs.spinner)} Fetching roms")
-            time.sleep(0.1)
-        elif not self.download_rom_ready.is_set() and self.downloading_rom:
-            ui.draw_loader(self.downloaded_percent)
+        if not self.status.roms_ready.is_set():
             ui.draw_log(
-                text_line_1=f"{self.downloading_rom_position}/{len(self.download_queue)} | {self.downloaded_percent:.2f}% | {ui.glyphs.download} {self.downloading_rom.name}",
-                text_line_2=f"({self.downloading_rom.file_name})",
+                text_line_1=f"{next(ui.glyphs.spinner)} Fetching roms", wait=0.1
+            )
+        elif not self.status.download_rom_ready.is_set() and self.status.downloading_rom:
+            ui.draw_loader(self.status.downloaded_percent)
+            ui.draw_log(
+                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {ui.glyphs.download} {self.status.downloading_rom.name}",
+                text_line_2=f"({self.status.downloading_rom.file_name})",
                 background=False,
+                wait=0.1,
             )
-            time.sleep(0.1)
-        elif not self.valid_host:
+        elif not self.status.valid_host:
             ui.draw_log(
-                text_line_1="Error: Invalid host",
-                text_color=ui.colorRed,
+                text_line_1="Error: Invalid host", text_color=ui.colorRed, wait=2
             )
-            time.sleep(2)
-            self.valid_host = True
-        elif not self.valid_credentials:
+            self.status.valid_host = True
+        elif not self.status.valid_credentials:
             ui.draw_log(
-                text_line_1="Error: Permission denied",
-                text_color=ui.colorRed,
+                text_line_1="Error: Permission denied", text_color=ui.colorRed, wait=2
             )
-            time.sleep(2)
-            self.valid_credentials = True
+            self.status.valid_credentials = True
         else:
             ui.button_circle((20, 460), "A", "Download", color=ui.colorRed)
             ui.button_circle((135, 460), "B", "Back", color=ui.colorYellow)
             ui.button_circle((215, 460), "Y", "Refresh", color=ui.colorGreen)
 
     def _update_roms_view(self):
+        print(self.status.roms_ready.is_set())
+        print(self.status.download_rom_ready.is_set())
         if self.input.key("A"):
-            if self.roms_ready.is_set() and self.download_rom_ready.is_set():
-                self.download_rom_ready.clear()
+            if (
+                self.status.roms_ready.is_set()
+                and self.status.download_rom_ready.is_set()
+            ):
+                self.status.download_rom_ready.clear()
                 # If no game is "multi-selected" the current game is added to the download list
-                if len(self.multi_selected_roms) == 0:
-                    self.multi_selected_roms.append(
-                        self.roms[self.roms_selected_position]
+                if len(self.status.multi_selected_roms) == 0:
+                    self.status.multi_selected_roms.append(
+                        self.status.roms[self.roms_selected_position]
                     )
-                self.download_queue = self.multi_selected_roms
-                threading.Thread(target=self._download_roms).start()
+                self.status.download_queue = self.status.multi_selected_roms
+                threading.Thread(target=self.api.download_rom).start()
                 self.input.reset_input()
         elif self.input.key("B"):
-            self.current_view = self.previows_view
-            self.romm_provider.reset_roms_list()
+            if self.status.selected_platform:
+                self.status.current_view = View.PLATFORMS
+                self.status.selected_platform = None
+            elif self.status.selected_collection:
+                self.status.current_view = View.COLLECTIONS
+                self.status.selected_collection = None
+            else:
+                self.status.current_view = View.PLATFORMS
+                self.status.selected_platform = None
+                self.status.selected_collection = None
+            self.status.reset_roms_list()
             self.roms_selected_position = 0
-            self.multi_selected_roms = []
+            self.status.multi_selected_roms = []
             self.input.reset_input()
         elif self.input.key("Y"):
-            if self.roms_ready.is_set():
-                self.roms_ready.clear()
-                threading.Thread(target=self._fetch_roms).start()
-                self.multi_selected_roms = []
+            if self.status.roms_ready.is_set():
+                self.status.roms_ready.clear()
+                threading.Thread(target=self.api.fetch_roms).start()
+                self.status.multi_selected_roms = []
             self.input.reset_input()
         elif self.input.key("SELECT"):
-            if self.download_rom_ready.is_set():
+            if self.status.download_rom_ready.is_set():
                 if (
-                    self.roms[self.roms_selected_position]
-                    not in self.multi_selected_roms
+                    self.status.roms[self.roms_selected_position]
+                    not in self.status.multi_selected_roms
                 ):
-                    self.multi_selected_roms.append(
-                        self.roms[self.roms_selected_position]
+                    self.status.multi_selected_roms.append(
+                        self.status.roms[self.roms_selected_position]
                     )
                 else:
-                    self.multi_selected_roms.remove(
-                        self.roms[self.roms_selected_position]
+                    self.status.multi_selected_roms.remove(
+                        self.status.roms[self.roms_selected_position]
                     )
             self.input.reset_input()
         elif self.input.key("START"):
-            self.show_contextual_menu = not self.show_contextual_menu
-            if self.show_contextual_menu:
+            self.status.show_contextual_menu = not self.status.show_contextual_menu
+            if self.status.show_contextual_menu:
                 self.contextual_menu_options = [
                     (
                         f"{ui.glyphs.about} Rom info",
                         0,
                         lambda: ui.draw_log(
-                            text_line_1=f"Rom name: {self.roms[self.roms_selected_position].name}"
+                            text_line_1=f"Rom name: {self.status.roms[self.roms_selected_position].name}",
+                            wait=2,
                         ),
                     ),
                     (
                         f"{ui.glyphs.delete} Remove from device",
-                        2,
+                        1,
                         lambda: os.remove(
                             os.path.join(
                                 self.fs.get_sd_storage_platform_path(
-                                    self.roms[self.roms_selected_position].platform_slug
+                                    self.status.roms[
+                                        self.roms_selected_position
+                                    ].platform_slug
                                 ),
-                                self.roms[self.roms_selected_position].file_name,
+                                self.status.roms[self.roms_selected_position].file_name,
                             )
                         ),
                     ),
@@ -394,7 +323,7 @@ class RomM:
             self.input.reset_input()
         else:
             self.roms_selected_position = self.input.handle_navigation(
-                self.roms_selected_position, self.max_n_roms, len(self.roms)
+                self.roms_selected_position, self.max_n_roms, len(self.status.roms)
             )
 
     def _render_contextual_menu(self):
@@ -404,7 +333,7 @@ class RomM:
         n_options = len(self.contextual_menu_options)
         option_height = 32
         gap = 3
-        if self.current_view == View.PLATFORMS:
+        if self.status.current_view == View.PLATFORMS:
             ui.draw_menu_background(
                 pos,
                 width,
@@ -413,9 +342,9 @@ class RomM:
                 gap,
                 padding,
             )
-        elif self.current_view == View.COLLECTIONS:
+        elif self.status.current_view == View.COLLECTIONS:
             ui.draw_menu_background(pos, width, n_options, option_height, gap, padding)
-        elif self.current_view == View.ROMS:
+        elif self.status.current_view == View.ROMS:
             ui.draw_menu_background(pos, width, n_options, option_height, gap, padding)
         else:
             ui.draw_menu_background(pos, width, n_options, option_height, gap, padding)
@@ -434,10 +363,10 @@ class RomM:
     def _update_contextual_menu(self):
         if self.input.key("A"):
             self.contextual_menu_options[self.contextual_menu_selected_position][2]()
-            self.show_contextual_menu = False
+            self.status.show_contextual_menu = False
             self.input.reset_input()
         elif self.input.key("B"):
-            self.show_contextual_menu = not self.show_contextual_menu
+            self.status.show_contextual_menu = not self.status.show_contextual_menu
             self.input.reset_input()
         else:
             self.contextual_menu_selected_position = self.input.handle_navigation(
@@ -498,14 +427,14 @@ class RomM:
                     ui.draw_log(
                         text_line_1=f"Set download path to SD {self.fs.get_sd_storage()}: {self.fs.get_sd_storage_path()}",
                         text_color=ui.colorGreen,
+                        wait=2,
                     )
-                time.sleep(2)
                 self.input.reset_input()
             elif self.start_menu_selected_position == StartMenuOptions.EXIT[1]:
                 ui.draw_end()
                 sys.exit()
         elif self.input.key("B"):
-            self.show_start_menu = not self.show_start_menu
+            self.status.show_start_menu = not self.status.show_start_menu
             self.input.reset_input()
         else:
             self.start_menu_selected_position = self.input.handle_navigation(
@@ -515,65 +444,76 @@ class RomM:
             )
 
     def _update_common(self):
-        if self.input.key("MENUF") and not self.show_contextual_menu:
-            self.show_start_menu = not self.show_start_menu
+        if self.input.key("MENUF") and not self.status.show_contextual_menu:
+            self.status.show_start_menu = not self.status.show_start_menu
             self.input.reset_input()
-        if self.input.key("START") and not self.show_start_menu:
-            self.show_contextual_menu = not self.show_contextual_menu
+        if self.input.key("START") and not self.status.show_start_menu:
+            self.status.show_contextual_menu = not self.status.show_contextual_menu
             self.input.reset_input()
 
     def start(self):
         threading.Thread(target=self.input.check, daemon=True).start()
-        ui.draw_header(self.romm_provider.host, self.romm_provider.username)
+        ui.draw_header(self.api.host, self.api.username)
         self._render_platforms_view()
-        threading.Thread(target=self._fetch_platforms).start()
-        threading.Thread(target=self._fetch_collections).start()
-        self.roms_ready.set()
-        self.download_rom_ready.set()
+        threading.Thread(target=self.api.fetch_platforms).start()
+        threading.Thread(target=self.api.fetch_collections).start()
+        self.status.roms_ready.set()
+        self.status.download_rom_ready.set()
 
     def update(self):
         ui.draw_clear()
 
-        ui.draw_header(self.romm_provider.host, self.romm_provider.username)
+        ui.draw_header(self.api.host, self.api.username)
 
-        # Render view
-        if self.valid_host:
-            if self.valid_credentials:
-                if self.current_view == View.PLATFORMS:
-                    self._render_platforms_view()
-                    if not self.show_start_menu and not self.show_contextual_menu:
-                        self._update_platforms_view()
-                elif self.current_view == View.COLLECTIONS:
-                    self._render_collections_view()
-                    if not self.show_start_menu and not self.show_contextual_menu:
-                        self._update_collections_view()
-                elif self.current_view == View.ROMS:
-                    self._render_roms_view()
-                    if not self.show_start_menu and not self.show_contextual_menu:
-                        self._update_roms_view()
-                else:
-                    self._render_platforms_view()
-                    if not self.show_start_menu and not self.show_contextual_menu:
-                        self._update_platforms_view()
-            else:
-                ui.draw_text(
-                    (ui.screen_width / 2, ui.screen_height / 2),
-                    "Error: Permission denied",
-                    color=ui.colorRed,
-                    anchor="mm",
-                )
-        else:
+        if not self.status.valid_host:
             ui.draw_text(
                 (ui.screen_width / 2, ui.screen_height / 2),
                 "Error: Invalid host",
                 color=ui.colorRed,
                 anchor="mm",
             )
+        elif not self.status.valid_credentials:
+            ui.draw_text(
+                (ui.screen_width / 2, ui.screen_height / 2),
+                "Error: Permission denied",
+                color=ui.colorRed,
+                anchor="mm",
+            )
+        else:
+            if self.status.current_view == View.PLATFORMS:
+                self._render_platforms_view()
+                if (
+                    not self.status.show_start_menu
+                    and not self.status.show_contextual_menu
+                ):
+                    self._update_platforms_view()
+            elif self.status.current_view == View.COLLECTIONS:
+                self._render_collections_view()
+                if (
+                    not self.status.show_start_menu
+                    and not self.status.show_contextual_menu
+                ):
+                    self._update_collections_view()
+            elif self.status.current_view == View.ROMS:
+                self._render_roms_view()
+                if (
+                    not self.status.show_start_menu
+                    and not self.status.show_contextual_menu
+                ):
+                    self._update_roms_view()
+            else:
+                self._render_platforms_view()
+                if (
+                    not self.status.show_start_menu
+                    and not self.status.show_contextual_menu
+                ):
+                    self._update_platforms_view()
+
         # Render start menu
-        if self.show_start_menu:
+        if self.status.show_start_menu:
             self._render_start_menu()
             self._update_start_menu()
-        elif self.show_contextual_menu:
+        elif self.status.show_contextual_menu:
             self._render_contextual_menu()
             self._update_contextual_menu()
 

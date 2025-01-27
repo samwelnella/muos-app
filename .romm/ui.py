@@ -1,8 +1,9 @@
 import mmap
 import os
+import time
 from fcntl import ioctl
 from collections import namedtuple
-from filesystem.filesystem import Filesystem
+from filesystem import Filesystem
 import itertools
 
 from PIL import Image, ImageDraw, ImageFont
@@ -154,10 +155,11 @@ def button_circle(pos, button, text, color=colorViolet):
 def draw_log(
     text_line_1="",
     text_line_2="",
-    fill="Black",
+    fill="black",
     outline="black",
     text_color="white",
     background=True,
+    wait=0
 ):
     margin_bg = 5
     margin_bg_bottom = 40
@@ -206,6 +208,7 @@ def draw_log(
             color=text_color,
         )
     draw_update()  # Update to show log before any api call that can block the render
+    time.sleep(wait)
 
 
 def draw_loader(percent):
