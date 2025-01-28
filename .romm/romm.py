@@ -57,7 +57,7 @@ class RomM:
             )
         elif not self.status.valid_host:
             ui.draw_log(
-                text_line_1="Error: Can't connect to host", text_color=ui.colorRed, wait=2
+                text_line_1=f"Error: Can't connect to host {self.api.host}", text_color=ui.colorRed, wait=2
             )
             self.status.valid_host = True
         elif not self.status.valid_credentials:
@@ -142,7 +142,7 @@ class RomM:
             )
         elif not self.status.valid_host:
             ui.draw_log(
-                text_line_1="Error: Can't connect to host", text_color=ui.colorRed, wait=2
+                text_line_1=f"Error: Can't connect to host {self.api.host}", text_color=ui.colorRed, wait=2
             )
             self.status.valid_host = True
         elif not self.status.valid_credentials:
@@ -245,7 +245,7 @@ class RomM:
             )
         elif not self.status.valid_host:
             ui.draw_log(
-                text_line_1="Error: Can't connect to host", text_color=ui.colorRed, wait=2
+                text_line_1=f"Error: Can't connect to host {self.api.host}", text_color=ui.colorRed, wait=2
             )
             self.status.valid_host = True
         elif not self.status.valid_credentials:
@@ -513,7 +513,7 @@ class RomM:
             ui.button_circle((20, 460), "Y", "Refresh", color=ui.colorGreen)
             ui.draw_text(
                 (ui.screen_width / 2, ui.screen_height / 2),
-                "Error: Can't connect to host",
+                f"Error: Can't connect to host\n{self.api.host}",
                 color=ui.colorRed,
                 anchor="mm",
             )
