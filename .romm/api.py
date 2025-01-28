@@ -36,9 +36,12 @@ class API:
 
     def __init__(self):
         self.host = os.getenv("HOST", "")
-        self.__platforms_endpoint = "/api/platforms"
-        self.__collections_endpoint = "/api/collections"
-        self.__roms_endpoint = "/api/roms"
+        self.__platforms_endpoint = "api/platforms"
+        self.__platform_icon_url = "assets/platforms"
+        self.__collections_endpoint = "api/collections"
+        self.__roms_endpoint = "api/roms"
+        self.__user_me_endpoint = "api/users/me"
+        self.__user_profile_picture_url = "assets/romm/assets"
         self.username = os.getenv("USERNAME", "")
         self.__password = os.getenv("PASSWORD", "")
         self.__credentials = f"{self.username}:{self.__password}"
@@ -62,10 +65,87 @@ class API:
         s = round(size_bytes / p, 2)
         return (s, size_name[i])
 
+    def _fetch_user_profile_picture(self, avatar_path):
+        file_extension = avatar_path.split(".")[-1]
+        try:
+            request = Request(
+                f"{self.host}/{self.__user_profile_picture_url}/{avatar_path}",
+                headers=self.__headers
+            )
+        except ValueError as e:
+            print(e)
+            self.__status.valid_host = False
+            self.__status.valid_credentials = False
+            return
+        try:
+            if request.type not in ("http", "https"):
+                self.__status.valid_host = False
+                self.__status.valid_credentials = False
+                return
+            response = urlopen(request, timeout=60)  # trunk-ignore(bandit/B310)
+        except HTTPError as e:
+            print(e)
+            if e.code == 403:
+                self.__status.valid_host = True
+                self.__status.valid_credentials = False
+                return
+            else:
+                raise
+        except URLError as e:
+            print(e)
+            self.__status.valid_host = False
+            self.__status.valid_credentials = False
+            return
+        if not os.path.exists(self.__fs.resources_path):
+            makedirs(self.__fs.resources_path)
+        self.__status.profile_pic_path = f"{self.__fs.resources_path}/{self.username}.{file_extension}"
+        with open(self.__status.profile_pic_path, "wb") as f:
+            f.write(response.read())
+        icon = Image.open(self.__status.profile_pic_path)
+        icon = icon.resize((30, 30))
+        icon.save(self.__status.profile_pic_path)
+        self.__status.valid_host = True
+        self.__status.valid_credentials = True
+
+    def fetch_me(self):
+        try:
+            request = Request(
+                f"{self.host}/{self.__user_me_endpoint}",
+                headers=self.__headers
+            )
+        except ValueError as e:
+            print(e)
+            self.__status.valid_host = False
+            self.__status.valid_credentials = False
+            return
+        try:
+            if request.type not in ("http", "https"):
+                self.__status.valid_host = False
+                self.__status.valid_credentials = False
+                return
+            response = urlopen(request, timeout=60)  # trunk-ignore(bandit/B310)
+        except HTTPError as e:
+            print(e)
+            if e.code == 403:
+                self.__status.valid_host = True
+                self.__status.valid_credentials = False
+                return
+            else:
+                raise
+        except URLError as e:
+            print(e)
+            self.__status.valid_host = False
+            self.__status.valid_credentials = False
+            return
+        me = json.loads(response.read().decode("utf-8"))
+        self.__status.me = me
+        self._fetch_user_profile_picture(me["avatar_path"])
+        self.__status.me_ready.set()
+
     def _fetch_platform_icon(self, platform_slug):
         try:
             request = Request(
-                f"{self.host}/assets/platforms/{platform_slug}.ico",
+                f"{self.host}/{self.__platform_icon_url}/{platform_slug}.ico",
                 headers=self.__headers
             )
         except ValueError as e:
@@ -105,7 +185,7 @@ class API:
     def fetch_platforms(self):
         try:
             request = Request(
-                f"{self.host}{self.__platforms_endpoint}", headers=self.__headers
+                f"{self.host}/{self.__platforms_endpoint}", headers=self.__headers
             )
         except ValueError:
             self.__status.platforms = []
@@ -149,7 +229,8 @@ class API:
                         slug=platform["slug"],
                     )
                 )
-                self._fetch_platform_icon(platform["slug"])
+                if not os.path.exists(f"{self.__fs.resources_path}/{platform['slug']}.ico"):
+                    self._fetch_platform_icon(platform["slug"])
         self.__status.platforms = __platforms
         self.__status.valid_host = True
         self.__status.valid_credentials = True
@@ -158,7 +239,7 @@ class API:
     def fetch_collections(self):
         try:
             request = Request(
-                f"{self.host}{self.__collections_endpoint}", headers=self.__headers
+                f"{self.host}/{self.__collections_endpoint}", headers=self.__headers
             )
         except ValueError:
             self.__status.collections = []
@@ -217,7 +298,7 @@ class API:
 
         try:
             request = Request(
-                f"{self.host}{self.__roms_endpoint}?{view}_id={id}&order_by=name&order_dir=asc",
+                f"{self.host}/{self.__roms_endpoint}?{view}_id={id}&order_by=name&order_dir=asc",
                 headers=self.__headers,
             )
         except ValueError:
@@ -273,7 +354,7 @@ class API:
                 self.__fs.get_sd_storage_platform_path(rom.platform_slug),
                 rom.file_name,
             )
-            url = f"{self.host}{self.__roms_endpoint}/{rom.id}/content/{quote(rom.file_name)}"
+            url = f"{self.host}/{self.__roms_endpoint}/{rom.id}/content/{quote(rom.file_name)}"
             makedirs(os.path.dirname(dest_path), exist_ok=True)
 
             try:

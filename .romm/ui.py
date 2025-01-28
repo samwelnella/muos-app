@@ -1,10 +1,10 @@
 import mmap
 import os
 import time
-from fcntl import ioctl
-from collections import namedtuple
 from filesystem import Filesystem
-import itertools
+from glyps import glyphs
+from status import Status
+from fcntl import ioctl
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -17,35 +17,6 @@ screen_size = screen_width * screen_height * bytes_per_pixel
 
 fontFile = {}
 fontFile[15] = ImageFont.truetype("/usr/share/fonts/romm/romm.ttf", 15)
-
-glyphs = namedtuple(
-    "Glyphs",
-    [
-        "host",
-        "user",
-        "download",
-        "spinner",
-        "cloud_sync",
-        "checkbox",
-        "checkbox_selected",
-        "about",
-        "microsd",
-        "delete",
-        "exit",
-    ],
-)(
-    host="\uf000",
-    user="\uf001",
-    download="\uf00b",
-    spinner=itertools.cycle(["\uf004", "\uf005", "\uf006", "\uf007"]),
-    checkbox="\uf002",
-    checkbox_selected="\uf003",
-    cloud_sync="\uf00a",
-    about="\uf008",
-    microsd="\uf009",
-    delete="\uf00d",
-    exit="\uf00c",
-)
 
 colorViolet = "#ad3c6b"
 colorGreen = "#41aa3b"
@@ -60,7 +31,7 @@ activeImage: Image.Image
 activeDraw: ImageDraw.ImageDraw
 
 fs = Filesystem()
-
+status = Status()
 
 def screen_reset():
     ioctl(
@@ -238,11 +209,18 @@ def draw_loader(percent):
 
 
 def draw_header(host, username):
-    pos_text = [55, 9]
     logo = Image.open(f"{fs.resources_path}/romm.png")
     pos_logo = [15, 7]
+    profile_pic = Image.open(status.profile_pic_path)
+    margin_right_profile_pic = 45
+    margin_top_profile_pic = 2
+    pos_profile_pic = [screen_width - margin_right_profile_pic, margin_top_profile_pic]
+    pos_text = [55, 9]
     activeImage.paste(
         logo, (pos_logo[0], pos_logo[1]), mask=logo if logo.mode == "RGBA" else None
+    )
+    activeImage.paste(
+        profile_pic, (pos_profile_pic[0], pos_profile_pic[1]), mask=profile_pic if profile_pic.mode == "RGBA" else None
     )
 
     draw_text(
@@ -318,7 +296,7 @@ def draw_roms_list(
     draw_rectangle_r([10, 70, 630, 437], 0, fill=colorGrayD2, outline=None)
     start_idx = int(roms_selected_position / max_n_roms) * max_n_roms
     end_idx = start_idx + max_n_roms
-    max_len_text = 47
+    max_len_text = 47 - (4 if prepend_platform_slug else 0)
     for i, r in enumerate(roms[start_idx:end_idx]):
         is_selected = i == (roms_selected_position % max_n_roms)
         is_in_device = os.path.exists(
@@ -334,8 +312,6 @@ def draw_roms_list(
             else r.name[:max_len_text]
             + f"... [{r.file_size[0]}{r.file_size[1]}] {sync_flag_text}"
         )
-        if prepend_platform_slug:
-            row_text = f"({r.platform_slug}) " + row_text
         row_text = f"{glyphs.checkbox_selected if r in multi_selected_roms else glyphs.checkbox} {row_text}"
         row_list(
             row_text,
@@ -345,6 +321,7 @@ def draw_roms_list(
             is_selected,
             fill=header_color,
             outline=header_color if r in multi_selected_roms else None,
+            append_icon_path=f"{fs.resources_path}/{r.platform_slug}.ico" if prepend_platform_slug else ""
         )
 
 

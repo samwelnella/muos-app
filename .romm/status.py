@@ -1,5 +1,5 @@
 import threading
-import ui
+from glyps import glyphs
 
 class View:
     PLATFORMS = "platform"
@@ -8,8 +8,8 @@ class View:
 
 
 class StartMenuOptions:
-    SD_SWITCH = (f"{ui.glyphs.microsd} Switch SD", 0)
-    EXIT = (f"{ui.glyphs.exit} Exit", 1)
+    SD_SWITCH = (f"{glyphs.microsd} Switch SD", 0)
+    EXIT = (f"{glyphs.exit} Exit", 1)
 
 
 class Status():
@@ -23,6 +23,9 @@ class Status():
     def __init__(self):
         self.valid_host = True
         self.valid_credentials = True
+
+        self.me = None
+        self.profile_pic_path = ""
 
         self.current_view = View.PLATFORMS
         self.selected_platform = None
@@ -39,6 +42,7 @@ class Status():
         self.collections_ready = threading.Event()
         self.roms_ready = threading.Event()
         self.download_rom_ready = threading.Event()
+        self.me_ready = threading.Event()
 
         self.multi_selected_roms = []
         self.download_queue = []

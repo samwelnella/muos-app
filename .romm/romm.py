@@ -4,6 +4,7 @@ import os
 
 import ui
 from filesystem import Filesystem
+from glyps import glyphs
 from api import API
 from input import Input
 from status import Status, View, StartMenuOptions
@@ -42,14 +43,14 @@ class RomM:
         )
         if not self.status.platforms_ready.is_set():
             ui.draw_log(
-                text_line_1=f"{next(ui.glyphs.spinner)} Fetching platforms", wait=0.1
+                text_line_1=f"{next(glyphs.spinner)} Fetching platforms", wait=0.1
             )
         elif (
             not self.status.download_rom_ready.is_set() and self.status.downloading_rom
         ):
             ui.draw_loader(self.status.downloaded_percent)
             ui.draw_log(
-                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {ui.glyphs.download} {self.status.downloading_rom.name}",
+                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
                 text_line_2=f"({self.status.downloading_rom.file_name})",
                 background=False,
                 wait=0.1,
@@ -80,7 +81,7 @@ class RomM:
 
     def _update_platforms_view(self):
         if self.input.key("A"):
-            if self.status.roms_ready.is_set() and self.status.platforms:
+            if self.status.roms_ready.is_set() and len(self.status.platforms) > 0:
                 self.status.roms_ready.clear()
                 self.status.roms = []
                 self.status.selected_platform = self.status.platforms[
@@ -102,7 +103,7 @@ class RomM:
             if self.status.show_contextual_menu:
                 self.contextual_menu_options = [
                     (
-                        f"{ui.glyphs.about} Platform info",
+                        f"{glyphs.about} Platform info",
                         0,
                         lambda: ui.draw_log(
                             text_line_1=f"Platform name: {self.status.platforms[self.platforms_selected_position].display_name}",
@@ -127,14 +128,14 @@ class RomM:
         )
         if not self.status.collections_ready.is_set():
             ui.draw_log(
-                text_line_1=f"{next(ui.glyphs.spinner)} Fetching collections", wait=0.1
+                text_line_1=f"{next(glyphs.spinner)} Fetching collections", wait=0.1
             )
         elif (
             not self.status.download_rom_ready.is_set() and self.status.downloading_rom
         ):
             ui.draw_loader(self.status.downloaded_percent)
             ui.draw_log(
-                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {ui.glyphs.download} {self.status.downloading_rom.name}",
+                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
                 text_line_2=f"({self.status.downloading_rom.file_name})",
                 background=False,
                 wait=0.1,
@@ -165,7 +166,7 @@ class RomM:
 
     def _update_collections_view(self):
         if self.input.key("A"):
-            if self.status.roms_ready.is_set() and self.status.collections:
+            if self.status.roms_ready.is_set() and len(self.status.collections) > 0:
                 self.status.roms_ready.clear()
                 self.status.roms = []
                 self.status.selected_collection = self.status.collections[
@@ -187,7 +188,7 @@ class RomM:
             if self.status.show_contextual_menu:
                 self.contextual_menu_options = [
                     (
-                        f"{ui.glyphs.about} Collection info",
+                        f"{glyphs.about} Collection info",
                         0,
                         lambda: ui.draw_log(
                             text_line_1=f"Collection name: {self.status.collections[self.collections_selected_position].name}",
@@ -230,14 +231,14 @@ class RomM:
         )
         if not self.status.roms_ready.is_set():
             ui.draw_log(
-                text_line_1=f"{next(ui.glyphs.spinner)} Fetching roms", wait=0.1
+                text_line_1=f"{next(glyphs.spinner)} Fetching roms", wait=0.1
             )
         elif (
             not self.status.download_rom_ready.is_set() and self.status.downloading_rom
         ):
             ui.draw_loader(self.status.downloaded_percent)
             ui.draw_log(
-                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {ui.glyphs.download} {self.status.downloading_rom.name}",
+                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
                 text_line_2=f"({self.status.downloading_rom.file_name})",
                 background=False,
                 wait=0.1,
@@ -258,8 +259,6 @@ class RomM:
             ui.button_circle((215, 460), "Y", "Refresh", color=ui.colorGreen)
 
     def _update_roms_view(self):
-        print(self.status.roms_ready.is_set())
-        print(self.status.download_rom_ready.is_set())
         if self.input.key("A"):
             if (
                 self.status.roms_ready.is_set()
@@ -315,7 +314,7 @@ class RomM:
                 selected_rom = self.status.roms[self.roms_selected_position]
                 self.contextual_menu_options = [
                     (
-                        f"{ui.glyphs.about} Rom info",
+                        f"{glyphs.about} Rom info",
                         0,
                         lambda: ui.draw_log(
                             text_line_1=f"Rom name: {selected_rom.name}",
@@ -332,7 +331,7 @@ class RomM:
                 if is_in_device:
                     self.contextual_menu_options.append(
                         (
-                            f"{ui.glyphs.delete} Remove from device",
+                            f"{glyphs.delete} Remove from device",
                             1,
                             lambda: os.remove(
                                 os.path.join(
@@ -492,17 +491,18 @@ class RomM:
 
     def start(self):
         threading.Thread(target=self.input.check, daemon=True).start()
-        ui.draw_header(self.api.host, self.api.username)
         self._render_platforms_view()
         threading.Thread(target=self.api.fetch_platforms).start()
         threading.Thread(target=self.api.fetch_collections).start()
+        threading.Thread(target=self.api.fetch_me).start()
         self.status.roms_ready.set()
         self.status.download_rom_ready.set()
 
     def update(self):
         ui.draw_clear()
 
-        ui.draw_header(self.api.host, self.api.username)
+        if self.status.me_ready.is_set():
+            ui.draw_header(self.api.host, self.api.username)
 
         if not self.status.valid_host:
             if self.input.key("Y"):
