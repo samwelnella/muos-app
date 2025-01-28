@@ -221,7 +221,7 @@ class RomM:
             ].name
             header_color = ui.colorYellow
             prepend_platform_slug = True
-        total_pages = (len(self.status.roms) + self.max_n_roms - 1) // self.max_n_roms
+        total_pages = (len(self.status.roms_to_show) + self.max_n_roms - 1) // self.max_n_roms
         current_page = (self.roms_selected_position // self.max_n_roms) + 1
         header_text += f" [{current_page}/{total_pages}]"
         if self.status.current_filter == Filter.ALL:
@@ -289,7 +289,7 @@ class RomM:
                 # If no game is "multi-selected" the current game is added to the download list
                 if len(self.status.multi_selected_roms) == 0:
                     self.status.multi_selected_roms.append(
-                        self.status.roms[self.roms_selected_position]
+                        self.status.roms_to_show[self.roms_selected_position]
                     )
                 self.status.download_queue = self.status.multi_selected_roms
                 threading.Thread(target=self.api.download_rom).start()
@@ -317,25 +317,26 @@ class RomM:
             self.input.reset_input()
         elif self.input.key("X"):
             self.status.current_filter = next(self.status.filters)
+            self.roms_selected_position = 0
             self.input.reset_input()
         elif self.input.key("SELECT"):
             if self.status.download_rom_ready.is_set():
                 if (
-                    self.status.roms[self.roms_selected_position]
+                    self.status.roms_to_show[self.roms_selected_position]
                     not in self.status.multi_selected_roms
                 ):
                     self.status.multi_selected_roms.append(
-                        self.status.roms[self.roms_selected_position]
+                        self.status.roms_to_show[self.roms_selected_position]
                     )
                 else:
                     self.status.multi_selected_roms.remove(
-                        self.status.roms[self.roms_selected_position]
+                        self.status.roms_to_show[self.roms_selected_position]
                     )
             self.input.reset_input()
         elif self.input.key("START"):
             self.status.show_contextual_menu = not self.status.show_contextual_menu
             if self.status.show_contextual_menu:
-                selected_rom = self.status.roms[self.roms_selected_position]
+                selected_rom = self.status.roms_to_show[self.roms_selected_position]
                 self.contextual_menu_options = [
                     (
                         f"{glyphs.about} Rom info",
@@ -362,11 +363,11 @@ class RomM:
                             lambda: os.remove(
                                 os.path.join(
                                     self.fs.get_sd_storage_platform_path(
-                                        self.status.roms[
+                                        self.status.roms_to_show[
                                             self.roms_selected_position
                                         ].platform_slug
                                     ),
-                                    self.status.roms[
+                                    self.status.roms_to_show[
                                         self.roms_selected_position
                                     ].file_name,
                                 )
@@ -376,7 +377,7 @@ class RomM:
             self.input.reset_input()
         else:
             self.roms_selected_position = self.input.handle_navigation(
-                self.roms_selected_position, self.max_n_roms, len(self.status.roms)
+                self.roms_selected_position, self.max_n_roms, len(self.status.roms_to_show)
             )
 
     def _render_contextual_menu(self):
