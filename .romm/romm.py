@@ -146,7 +146,7 @@ class RomM:
             self.status.valid_host = True
         elif not self.status.valid_credentials:
             ui.draw_log(
-                text_line_1="Error: Permission denied", text_color=ui.colorRed, wait=0.1
+                text_line_1="Error: Permission denied", text_color=ui.colorRed, wait=2
             )
             self.status.valid_credentials = True
         else:
@@ -312,30 +312,40 @@ class RomM:
         elif self.input.key("START"):
             self.status.show_contextual_menu = not self.status.show_contextual_menu
             if self.status.show_contextual_menu:
+                selected_rom = self.status.roms[self.roms_selected_position]
                 self.contextual_menu_options = [
                     (
                         f"{ui.glyphs.about} Rom info",
                         0,
                         lambda: ui.draw_log(
-                            text_line_1=f"Rom name: {self.status.roms[self.roms_selected_position].name}",
+                            text_line_1=f"Rom name: {selected_rom.name}",
                             wait=2,
                         ),
                     ),
-                    (
-                        f"{ui.glyphs.delete} Remove from device",
-                        1,
-                        lambda: os.remove(
-                            os.path.join(
-                                self.fs.get_sd_storage_platform_path(
-                                    self.status.roms[
-                                        self.roms_selected_position
-                                    ].platform_slug
-                                ),
-                                self.status.roms[self.roms_selected_position].file_name,
-                            )
-                        ),
-                    ),
                 ]
+                is_in_device = os.path.exists(
+                    os.path.join(
+                        self.fs.get_sd_storage_platform_path(selected_rom.platform_slug),
+                        selected_rom.file_name,
+                    )
+                )
+                if is_in_device:
+                    self.contextual_menu_options.append(
+                        (
+                            f"{ui.glyphs.delete} Remove from device",
+                            1,
+                            lambda: os.remove(
+                                os.path.join(
+                                    self.fs.get_sd_storage_platform_path(
+                                        self.status.roms[
+                                            self.roms_selected_position
+                                        ].platform_slug
+                                    ),
+                                    self.status.roms[self.roms_selected_position].file_name,
+                                )
+                            ),
+                        ),
+                    )
             self.input.reset_input()
         else:
             self.roms_selected_position = self.input.handle_navigation(
@@ -383,6 +393,7 @@ class RomM:
             self.input.reset_input()
         elif self.input.key("B"):
             self.status.show_contextual_menu = not self.status.show_contextual_menu
+            self.contextual_menu_options = []
             self.input.reset_input()
         else:
             self.contextual_menu_selected_position = self.input.handle_navigation(
