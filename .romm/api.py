@@ -28,7 +28,7 @@ Rom = namedtuple(
     ],
 )
 Collection = namedtuple("Collection", ["id", "name", "rom_count"])
-Platform = namedtuple("Platform", ["id", "display_name", "rom_count"])
+Platform = namedtuple("Platform", ["id", "display_name", "slug", "rom_count"])
 
 
 class API:
@@ -60,6 +60,43 @@ class API:
         p = math.pow(1024, i)
         s = round(size_bytes / p, 2)
         return (s, size_name[i])
+
+    def _fetch_platform_icon(self, platform_slug):
+        try:
+            request = Request(
+                f"{self.host}/assets/platforms/{platform_slug}.ico",
+                headers=self.__headers
+            )
+        except ValueError as e:
+            print(e)
+            self.__status.valid_host = False
+            self.__status.valid_credentials = False
+            return
+        try:
+            if request.type not in ("http", "https"):
+                self.__status.valid_host = False
+                self.__status.valid_credentials = False
+                return
+            response = urlopen(request, timeout=60)  # trunk-ignore(bandit/B310)
+        except HTTPError as e:
+            print(e)
+            if e.code == 403:
+                self.__status.valid_host = True
+                self.__status.valid_credentials = False
+                return
+            else:
+                raise
+        except URLError as e:
+            print(e)
+            self.__status.valid_host = False
+            self.__status.valid_credentials = False
+            return
+        if not os.path.exists("assets/"):
+            makedirs("assets/")
+        with open(f"assets/{platform_slug}.ico", "wb") as f:
+            f.write(response.read())
+        self.__status.valid_host = True
+        self.__status.valid_credentials = True
 
     def fetch_platforms(self):
         try:
@@ -105,8 +142,10 @@ class API:
                         id=platform["id"],
                         display_name=platform["display_name"],
                         rom_count=platform["rom_count"],
+                        slug=platform["slug"],
                     )
                 )
+                self._fetch_platform_icon(platform["slug"])
         self.__status.platforms = __platforms
         self.__status.valid_host = True
         self.__status.valid_credentials = True

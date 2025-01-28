@@ -115,9 +115,14 @@ def draw_rectangle_r(position, radius, fill=None, outline=None):
     activeDraw.rounded_rectangle(position, radius, fill=fill, outline=outline)
 
 
-def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None):
+def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None, append_icon_path=None):
+    try:
+        icon = Image.open(append_icon_path)
+        icon = icon.resize((20, 20))
+    except (FileNotFoundError, AttributeError):
+        append_icon_path = None
     radius = 5
-    margin_left_text = 12
+    margin_left_text = 12 + (30 if append_icon_path else 0)
     margin_top_text = 7
     draw_rectangle_r(
         [pos[0], pos[1], pos[0] + width, pos[1] + height],
@@ -125,6 +130,10 @@ def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None)
         fill=(fill if selected else colorGrayL1),
         outline=outline,
     )
+    if append_icon_path:
+        margin_left_icon = 10
+        margin_top_icon = 7
+        activeImage.paste(icon, (pos[0] + margin_left_icon, pos[1] + margin_top_icon), mask=icon if icon.mode == "RGBA" else None)
     draw_text((pos[0] + margin_left_text, pos[1] + margin_top_text), text)
 
 
@@ -262,6 +271,7 @@ def draw_platforms_list(
             32,
             is_selected,
             fill=fill,
+            append_icon_path=f"{fs.assets_path}/{p.slug}.ico"
         )
 
 

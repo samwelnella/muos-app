@@ -13,6 +13,9 @@ class Filesystem:
         self.__sd1_rom_storage_path = "/mnt/mmc/roms"
         self.__sd2_rom_storage_path = "/mnt/sdcard/roms"
         self.__current_sd = 2 if os.path.exists(self.__sd2_rom_storage_path) else 1
+        self.assets_path = "/mnt/mmc/MUOS/application/.romm/assets"
+        if not os.path.exists(self.assets_path):
+            os.makedirs(self.assets_path, exist_ok=True)
 
     def get_sd1_storage_path(self):
         return self.__sd1_rom_storage_path
