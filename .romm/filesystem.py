@@ -12,7 +12,14 @@ class Filesystem:
     def __init__(self):
         self.__sd1_rom_storage_path = "/mnt/mmc/roms"
         self.__sd2_rom_storage_path = "/mnt/sdcard/roms"
-        self.__current_sd = 2 if os.path.exists(self.__sd2_rom_storage_path) else 1
+        self.__current_sd = int(
+            os.getenv(
+                "DEFAULT_SD_CARD",
+                1 if os.path.exists(self.__sd1_rom_storage_path) else 2,
+            )
+        )
+        if self.__current_sd not in [1, 2]:
+            raise Exception(f"Invalid default SD card: {self.__current_sd}")
         self.resources_path = "/mnt/mmc/MUOS/application/.romm/resources"
 
     def get_sd1_storage_path(self):
@@ -37,7 +44,9 @@ class Filesystem:
         return self.__current_sd
 
     def switch_sd_storage(self):
-        if self.__current_sd == 1 and os.path.exists(self.__sd2_rom_storage_path):
+        if self.__current_sd == 1:
+            if not os.path.exists(self.__sd2_rom_storage_path):
+                os.mkdir(self.__sd2_rom_storage_path)
             self.__current_sd = 2
         else:
             self.__current_sd = 1
