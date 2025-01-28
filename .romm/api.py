@@ -139,7 +139,8 @@ class API:
             return
         me = json.loads(response.read().decode("utf-8"))
         self.__status.me = me
-        self._fetch_user_profile_picture(me["avatar_path"])
+        if me["avatar_path"]:
+            self._fetch_user_profile_picture(me["avatar_path"])
         self.__status.me_ready.set()
 
     def _fetch_platform_icon(self, platform_slug):

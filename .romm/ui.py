@@ -209,24 +209,27 @@ def draw_loader(percent):
 
 
 def draw_header(host, username):
+    username = username if len(username) <= 22 else username[:19] + "..."
     logo = Image.open(f"{fs.resources_path}/romm.png")
     pos_logo = [15, 7]
-    profile_pic = Image.open(status.profile_pic_path)
-    margin_right_profile_pic = 45
-    margin_top_profile_pic = 2
-    pos_profile_pic = [screen_width - margin_right_profile_pic, margin_top_profile_pic]
-    pos_text = [55, 9]
+    pos_text = [55, 8]
     activeImage.paste(
         logo, (pos_logo[0], pos_logo[1]), mask=logo if logo.mode == "RGBA" else None
     )
-    activeImage.paste(
-        profile_pic, (pos_profile_pic[0], pos_profile_pic[1]), mask=profile_pic if profile_pic.mode == "RGBA" else None
-    )
-
     draw_text(
         (pos_text[0], pos_text[1]),
         f"{glyphs.host} {host} | {glyphs.user} {username} | {glyphs.microsd} {fs.get_sd_storage()}",
     )
+
+    if status.profile_pic_path:
+        profile_pic = Image.open(status.profile_pic_path)
+        margin_right_profile_pic = 45
+        margin_top_profile_pic = 3
+        pos_profile_pic = [screen_width - margin_right_profile_pic, margin_top_profile_pic]
+        activeImage.paste(
+            profile_pic, (pos_profile_pic[0], pos_profile_pic[1]), mask=profile_pic if profile_pic.mode == "RGBA" else None
+        )
+
 
 
 def draw_platforms_list(
