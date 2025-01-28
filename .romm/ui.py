@@ -118,11 +118,10 @@ def draw_rectangle_r(position, radius, fill=None, outline=None):
 def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None, append_icon_path=None):
     try:
         icon = Image.open(append_icon_path)
-        icon = icon.resize((20, 20))
     except (FileNotFoundError, AttributeError):
         append_icon_path = None
     radius = 5
-    margin_left_text = 12 + (30 if append_icon_path else 0)
+    margin_left_text = 12 + (35 if append_icon_path else 0)
     margin_top_text = 7
     draw_rectangle_r(
         [pos[0], pos[1], pos[0] + width, pos[1] + height],
@@ -132,7 +131,7 @@ def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None,
     )
     if append_icon_path:
         margin_left_icon = 10
-        margin_top_icon = 7
+        margin_top_icon = 5
         activeImage.paste(icon, (pos[0] + margin_left_icon, pos[1] + margin_top_icon), mask=icon if icon.mode == "RGBA" else None)
     draw_text((pos[0] + margin_left_text, pos[1] + margin_top_text), text)
 
@@ -240,7 +239,7 @@ def draw_loader(percent):
 
 def draw_header(host, username):
     pos_text = [55, 9]
-    logo = Image.open("resources/romm.png")
+    logo = Image.open(f"{fs.resources_path}/romm.png")
     pos_logo = [15, 7]
     activeImage.paste(
         logo, (pos_logo[0], pos_logo[1]), mask=logo if logo.mode == "RGBA" else None
@@ -271,7 +270,7 @@ def draw_platforms_list(
             32,
             is_selected,
             fill=fill,
-            append_icon_path=f"{fs.assets_path}/{p.slug}.ico"
+            append_icon_path=f"{fs.resources_path}/{p.slug}.ico"
         )
 
 

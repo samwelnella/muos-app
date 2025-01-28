@@ -80,7 +80,7 @@ class RomM:
 
     def _update_platforms_view(self):
         if self.input.key("A"):
-            if self.status.roms_ready.is_set():
+            if self.status.roms_ready.is_set() and self.status.platforms:
                 self.status.roms_ready.clear()
                 self.status.roms = []
                 self.status.selected_platform = self.status.platforms[
@@ -165,7 +165,7 @@ class RomM:
 
     def _update_collections_view(self):
         if self.input.key("A"):
-            if self.status.roms_ready.is_set():
+            if self.status.roms_ready.is_set() and self.status.collections:
                 self.status.roms_ready.clear()
                 self.status.roms = []
                 self.status.selected_collection = self.status.collections[

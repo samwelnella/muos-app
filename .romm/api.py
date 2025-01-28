@@ -11,6 +11,7 @@ from urllib.request import Request, urlopen
 from filesystem import Filesystem
 from status import Status, View
 from dotenv import load_dotenv
+from PIL import Image
 
 # Load .env file from one folder above
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -91,10 +92,13 @@ class API:
             self.__status.valid_host = False
             self.__status.valid_credentials = False
             return
-        if not os.path.exists("assets/"):
-            makedirs("assets/")
-        with open(f"assets/{platform_slug}.ico", "wb") as f:
+        if not os.path.exists(self.__fs.resources_path):
+            makedirs(self.__fs.resources_path)
+        with open(f"{self.__fs.resources_path}/{platform_slug}.ico", "wb") as f:
             f.write(response.read())
+        icon = Image.open(f"{self.__fs.resources_path}/{platform_slug}.ico")
+        icon = icon.resize((30, 30))
+        icon.save(f"{self.__fs.resources_path}/{platform_slug}.ico")
         self.__status.valid_host = True
         self.__status.valid_credentials = True
 
