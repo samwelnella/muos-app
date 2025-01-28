@@ -505,6 +505,12 @@ class RomM:
         ui.draw_header(self.api.host, self.api.username)
 
         if not self.status.valid_host:
+            if self.input.key("Y"):
+                if self.status.platforms_ready.is_set():
+                    self.status.platforms_ready.clear()
+                    threading.Thread(target=self.api.fetch_platforms).start()
+                self.input.reset_input()
+            ui.button_circle((20, 460), "Y", "Refresh", color=ui.colorGreen)
             ui.draw_text(
                 (ui.screen_width / 2, ui.screen_height / 2),
                 "Error: Invalid host",
@@ -512,6 +518,12 @@ class RomM:
                 anchor="mm",
             )
         elif not self.status.valid_credentials:
+            if self.input.key("Y"):
+                if self.status.platforms_ready.is_set():
+                    self.status.platforms_ready.clear()
+                    threading.Thread(target=self.api.fetch_platforms).start()
+                self.input.reset_input()
+            ui.button_circle((20, 460), "Y", "Refresh", color=ui.colorGreen)
             ui.draw_text(
                 (ui.screen_width / 2, ui.screen_height / 2),
                 "Error: Permission denied",
