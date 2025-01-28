@@ -231,6 +231,7 @@ class API:
                 )
                 if not os.path.exists(f"{self.__fs.resources_path}/{platform['slug']}.ico"):
                     self._fetch_platform_icon(platform["slug"])
+        __platforms.sort(key=lambda platform: platform.display_name)
         self.__status.platforms = __platforms
         self.__status.valid_host = True
         self.__status.valid_credentials = True
@@ -283,6 +284,7 @@ class API:
                         rom_count=collection["rom_count"],
                     )
                 )
+        __collections.sort(key=lambda collection: collection.name)
         self.__status.collections = __collections
         self.__status.valid_host = True
         self.__status.valid_credentials = True
@@ -340,6 +342,7 @@ class API:
             for rom in roms
             if rom["platform_slug"] in MUOS_SUPPORTED_PLATFORMS
         ]
+        __roms.sort(key=lambda rom: rom.name)
         self.__status.roms = __roms
         self.__status.valid_host = True
         self.__status.valid_credentials = True
