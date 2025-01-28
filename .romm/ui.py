@@ -302,12 +302,7 @@ def draw_roms_list(
     max_len_text = 47 - (4 if prepend_platform_slug else 0)
     for i, r in enumerate(roms[start_idx:end_idx]):
         is_selected = i == (roms_selected_position % max_n_roms)
-        is_in_device = os.path.exists(
-            os.path.join(
-                fs.get_sd_storage_platform_path(r.platform_slug),
-                r.file_name,
-            )
-        )
+        is_in_device = fs.is_rom_in_device(r)
         sync_flag_text = f"{glyphs.cloud_sync} " if is_in_device else ""
         row_text = (
             f"{r.name} [{r.file_size[0]}{r.file_size[1]}] {sync_flag_text}"

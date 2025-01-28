@@ -62,3 +62,6 @@ class Filesystem:
             return self.get_sd1_storage_platform_path(platform)
         else:
             return self.get_sd2_storage_platform_path(platform)
+
+    def is_rom_in_device(self, rom):
+        return os.path.exists(os.path.join(self.get_sd_storage_platform_path(rom.platform_slug), rom.file_name))

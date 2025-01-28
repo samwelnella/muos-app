@@ -7,7 +7,7 @@ from filesystem import Filesystem
 from glyps import glyphs
 from api import API
 from input import Input
-from status import Status, View, StartMenuOptions
+from status import Status, View, StartMenuOptions, Filter
 from __version__ import version
 
 
@@ -57,7 +57,9 @@ class RomM:
             )
         elif not self.status.valid_host:
             ui.draw_log(
-                text_line_1=f"Error: Can't connect to host {self.api.host}", text_color=ui.colorRed, wait=2
+                text_line_1=f"Error: Can't connect to host {self.api.host}",
+                text_color=ui.colorRed,
+                wait=2,
             )
             self.status.valid_host = True
         elif not self.status.valid_credentials:
@@ -142,7 +144,9 @@ class RomM:
             )
         elif not self.status.valid_host:
             ui.draw_log(
-                text_line_1=f"Error: Can't connect to host {self.api.host}", text_color=ui.colorRed, wait=2
+                text_line_1=f"Error: Can't connect to host {self.api.host}",
+                text_color=ui.colorRed,
+                wait=2,
             )
             self.status.valid_host = True
         elif not self.status.valid_credentials:
@@ -220,19 +224,27 @@ class RomM:
         total_pages = (len(self.status.roms) + self.max_n_roms - 1) // self.max_n_roms
         current_page = (self.roms_selected_position // self.max_n_roms) + 1
         header_text += f" [{current_page}/{total_pages}]"
+        if self.status.current_filter == Filter.ALL:
+            self.status.roms_to_show = self.status.roms
+        elif self.status.current_filter == Filter.LOCAL:
+            self.status.roms_to_show = [
+                r for r in self.status.roms if self.fs.is_rom_in_device(r)
+            ]
+        elif self.status.current_filter == Filter.REMOTE:
+            self.status.roms_to_show = [
+                r for r in self.status.roms if not self.fs.is_rom_in_device(r)
+            ]
         ui.draw_roms_list(
             self.roms_selected_position,
             self.max_n_roms,
-            self.status.roms,
+            self.status.roms_to_show,
             header_text,
             header_color,
             self.status.multi_selected_roms,
             prepend_platform_slug=prepend_platform_slug,
         )
         if not self.status.roms_ready.is_set():
-            ui.draw_log(
-                text_line_1=f"{next(glyphs.spinner)} Fetching roms", wait=0.1
-            )
+            ui.draw_log(text_line_1=f"{next(glyphs.spinner)} Fetching roms", wait=0.1)
         elif (
             not self.status.download_rom_ready.is_set() and self.status.downloading_rom
         ):
@@ -245,7 +257,9 @@ class RomM:
             )
         elif not self.status.valid_host:
             ui.draw_log(
-                text_line_1=f"Error: Can't connect to host {self.api.host}", text_color=ui.colorRed, wait=2
+                text_line_1=f"Error: Can't connect to host {self.api.host}",
+                text_color=ui.colorRed,
+                wait=2,
             )
             self.status.valid_host = True
         elif not self.status.valid_credentials:
@@ -257,6 +271,13 @@ class RomM:
             ui.button_circle((20, 460), "A", "Download", color=ui.colorRed)
             ui.button_circle((135, 460), "B", "Back", color=ui.colorYellow)
             ui.button_circle((215, 460), "Y", "Refresh", color=ui.colorGreen)
+            ui.button_circle((320, 460), "X", f"Filter: {self.status.current_filter}", color=ui.colorBlue)
+            # ui.button_circle(
+            #     (410, 460),
+            #     "SELECT",
+            #     "Multiselect",
+            #     color=ui.colorPurple
+            # )
 
     def _update_roms_view(self):
         if self.input.key("A"):
@@ -294,6 +315,9 @@ class RomM:
                 threading.Thread(target=self.api.fetch_roms).start()
                 self.status.multi_selected_roms = []
             self.input.reset_input()
+        elif self.input.key("X"):
+            self.status.current_filter = next(self.status.filters)
+            self.input.reset_input()
         elif self.input.key("SELECT"):
             if self.status.download_rom_ready.is_set():
                 if (
@@ -324,7 +348,9 @@ class RomM:
                 ]
                 is_in_device = os.path.exists(
                     os.path.join(
-                        self.fs.get_sd_storage_platform_path(selected_rom.platform_slug),
+                        self.fs.get_sd_storage_platform_path(
+                            selected_rom.platform_slug
+                        ),
                         selected_rom.file_name,
                     )
                 )
@@ -340,7 +366,9 @@ class RomM:
                                             self.roms_selected_position
                                         ].platform_slug
                                     ),
-                                    self.status.roms[self.roms_selected_position].file_name,
+                                    self.status.roms[
+                                        self.roms_selected_position
+                                    ].file_name,
                                 )
                             ),
                         ),

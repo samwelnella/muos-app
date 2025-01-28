@@ -70,7 +70,7 @@ class API:
         try:
             request = Request(
                 f"{self.host}/{self.__user_profile_picture_url}/{avatar_path}",
-                headers=self.__headers
+                headers=self.__headers,
             )
         except ValueError as e:
             print(e)
@@ -98,7 +98,9 @@ class API:
             return
         if not os.path.exists(self.__fs.resources_path):
             makedirs(self.__fs.resources_path)
-        self.__status.profile_pic_path = f"{self.__fs.resources_path}/{self.username}.{file_extension}"
+        self.__status.profile_pic_path = (
+            f"{self.__fs.resources_path}/{self.username}.{file_extension}"
+        )
         with open(self.__status.profile_pic_path, "wb") as f:
             f.write(response.read())
         icon = Image.open(self.__status.profile_pic_path)
@@ -110,8 +112,7 @@ class API:
     def fetch_me(self):
         try:
             request = Request(
-                f"{self.host}/{self.__user_me_endpoint}",
-                headers=self.__headers
+                f"{self.host}/{self.__user_me_endpoint}", headers=self.__headers
             )
         except ValueError as e:
             print(e)
@@ -147,7 +148,7 @@ class API:
         try:
             request = Request(
                 f"{self.host}/{self.__platform_icon_url}/{platform_slug}.ico",
-                headers=self.__headers
+                headers=self.__headers,
             )
         except ValueError as e:
             print(e)
@@ -230,7 +231,9 @@ class API:
                         slug=platform["slug"],
                     )
                 )
-                if not os.path.exists(f"{self.__fs.resources_path}/{platform['slug']}.ico"):
+                if not os.path.exists(
+                    f"{self.__fs.resources_path}/{platform['slug']}.ico"
+                ):
                     self._fetch_platform_icon(platform["slug"])
         __platforms.sort(key=lambda platform: platform.display_name)
         self.__status.platforms = __platforms

@@ -1,5 +1,7 @@
 import threading
+import itertools
 from glyps import glyphs
+
 
 class View:
     PLATFORMS = "platform"
@@ -7,19 +9,25 @@ class View:
     ROMS = "roms"
 
 
+class Filter:
+    ALL = "all"
+    LOCAL = "local"
+    REMOTE = "remote"
+
+
 class StartMenuOptions:
     SD_SWITCH = (f"{glyphs.microsd} Switch SD", 0)
     EXIT = (f"{glyphs.exit} Exit", 1)
 
 
-class Status():
+class Status:
     _instance = None
 
     def __new__(cls):
         if not cls._instance:
             cls._instance = super(Status, cls).__new__(cls)
         return cls._instance
-    
+
     def __init__(self):
         self.valid_host = True
         self.valid_credentials = True
@@ -37,6 +45,9 @@ class Status():
         self.platforms = []
         self.collections = []
         self.roms = []
+        self.roms_to_show = []
+        self.filters = itertools.cycle([Filter.ALL, Filter.LOCAL, Filter.REMOTE])
+        self.current_filter = next(self.filters)
 
         self.platforms_ready = threading.Event()
         self.collections_ready = threading.Event()
@@ -50,7 +61,6 @@ class Status():
         self.downloading_rom_position = 0
         self.total_downloaded_bytes = 0
         self.downloaded_percent = 0
-
 
     def reset_roms_list(self):
         self.roms = []
