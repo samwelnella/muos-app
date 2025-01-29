@@ -601,3 +601,17 @@ class RomM:
         self._update_common()
 
         ui.draw_update()
+
+
+def main():
+
+    romm = RomM()
+    romm.start()
+
+    while True:
+        romm.update()
+        # Add a small sleep to prevent 100% CPU usage
+        time.sleep(0.01)
+
+if __name__ == "__main__":
+    main()

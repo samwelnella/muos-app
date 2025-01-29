@@ -40,12 +40,12 @@ fi
 # Check if dotenv is installed
 if ! python3 -c "import dotenv" &> /dev/null
 then
-    pip install python-dotenv
+    pip3 install python-dotenv
 fi
 
 
 cd "${ROOT_DIR}" || exit
 
-ENTRYPOINT="python3 main.py"
+ENTRYPOINT="python3 romm.py"
 
 ${ENTRYPOINT} > "${LOG_DIR}/$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1
