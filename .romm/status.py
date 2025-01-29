@@ -16,7 +16,7 @@ class Filter:
 
 
 class StartMenuOptions:
-    ABORT_DOWNLOAD = (f"{glyphs.exit} Abort downloads", 0)
+    ABORT_DOWNLOAD = (f"{glyphs.abort} Abort downloads", 0)
     SD_SWITCH = (f"{glyphs.microsd} Switch SD", 1)
     EXIT = (f"{glyphs.exit} Exit", 2)
 

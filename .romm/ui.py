@@ -103,7 +103,7 @@ def row_list(
         append_icon_path = None
     radius = 5
     margin_left_text = 12 + (35 if append_icon_path else 0)
-    margin_top_text = 7
+    margin_top_text = 8
     draw_rectangle_r(
         [pos[0], pos[1], pos[0] + width, pos[1] + height],
         radius,
@@ -157,8 +157,8 @@ def draw_log(
     margin_bg_bottom = 40
     radius_bg = 5
     max_len_text = 65
-    margin_text = 15
-    margin_text_bottom = 30
+    margin_left_text = 15
+    margin_text_bottom = 28
     margin_text_bottom_multiline_line_1 = 38
     margin_text_bottom_multiline_line_2 = 21
     if background:
@@ -175,7 +175,7 @@ def draw_log(
         )
     draw_text(
         (
-            margin_text,
+            margin_left_text,
             (
                 screen_height - margin_text_bottom
                 if not text_line_2
@@ -191,7 +191,7 @@ def draw_log(
     )
     if text_line_2:
         draw_text(
-            (margin_text, screen_height - margin_text_bottom_multiline_line_2),
+            (margin_left_text, screen_height - margin_text_bottom_multiline_line_2),
             (
                 text_line_2
                 if len(text_line_2) <= max_len_text
@@ -223,7 +223,7 @@ def draw_header(host, username):
     username = username if len(username) <= 22 else username[:19] + "..."
     logo = Image.open(f"{fs.resources_path}/romm.png")
     pos_logo = [15, 7]
-    pos_text = [55, 8]
+    pos_text = [55, 9]
     activeImage.paste(
         logo, (pos_logo[0], pos_logo[1]), mask=logo if logo.mode == "RGBA" else None
     )
