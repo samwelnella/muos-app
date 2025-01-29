@@ -33,6 +33,7 @@ activeDraw: ImageDraw.ImageDraw
 fs = Filesystem()
 status = Status()
 
+
 def screen_reset():
     ioctl(
         fb,
@@ -86,7 +87,16 @@ def draw_rectangle_r(position, radius, fill=None, outline=None):
     activeDraw.rounded_rectangle(position, radius, fill=fill, outline=outline)
 
 
-def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None, append_icon_path=None):
+def row_list(
+    text,
+    pos,
+    width,
+    height,
+    selected,
+    fill=colorViolet,
+    outline=None,
+    append_icon_path=None,
+):
     try:
         icon = Image.open(append_icon_path)
     except (FileNotFoundError, AttributeError):
@@ -103,7 +113,11 @@ def row_list(text, pos, width, height, selected, fill=colorViolet, outline=None,
     if append_icon_path:
         margin_left_icon = 10
         margin_top_icon = 5
-        activeImage.paste(icon, (pos[0] + margin_left_icon, pos[1] + margin_top_icon), mask=icon if icon.mode == "RGBA" else None)
+        activeImage.paste(
+            icon,
+            (pos[0] + margin_left_icon, pos[1] + margin_top_icon),
+            mask=icon if icon.mode == "RGBA" else None,
+        )
     draw_text((pos[0] + margin_left_text, pos[1] + margin_top_text), text)
 
 
@@ -138,7 +152,6 @@ def draw_log(
     outline="black",
     text_color="white",
     background=True,
-    wait=0
 ):
     margin_bg = 5
     margin_bg_bottom = 40
@@ -186,8 +199,6 @@ def draw_log(
             ),
             color=text_color,
         )
-    draw_update()  # Update to show log before any api call that can block the render
-    time.sleep(wait)
 
 
 def draw_loader(percent):
@@ -225,11 +236,15 @@ def draw_header(host, username):
         profile_pic = Image.open(status.profile_pic_path)
         margin_right_profile_pic = 45
         margin_top_profile_pic = 3
-        pos_profile_pic = [screen_width - margin_right_profile_pic, margin_top_profile_pic]
+        pos_profile_pic = [
+            screen_width - margin_right_profile_pic,
+            margin_top_profile_pic,
+        ]
         activeImage.paste(
-            profile_pic, (pos_profile_pic[0], pos_profile_pic[1]), mask=profile_pic if profile_pic.mode == "RGBA" else None
+            profile_pic,
+            (pos_profile_pic[0], pos_profile_pic[1]),
+            mask=profile_pic if profile_pic.mode == "RGBA" else None,
         )
-
 
 
 def draw_platforms_list(
@@ -251,7 +266,7 @@ def draw_platforms_list(
             32,
             is_selected,
             fill=fill,
-            append_icon_path=f"{fs.resources_path}/{p.slug}.ico"
+            append_icon_path=f"{fs.resources_path}/{p.slug}.ico",
         )
 
 
@@ -319,12 +334,23 @@ def draw_roms_list(
             is_selected,
             fill=header_color,
             outline=header_color if r in multi_selected_roms else None,
-            append_icon_path=f"{fs.resources_path}/{r.platform_slug}.ico" if prepend_platform_slug else ""
+            append_icon_path=(
+                f"{fs.resources_path}/{r.platform_slug}.ico"
+                if prepend_platform_slug
+                else ""
+            ),
         )
 
 
 def draw_menu_background(
-    pos, width, n_options, option_height, gap, padding, extra_top_offset=0, extra_bottom_offset=0
+    pos,
+    width,
+    n_options,
+    option_height,
+    gap,
+    padding,
+    extra_top_offset=0,
+    extra_bottom_offset=0,
 ):
     draw_rectangle_r(
         [

@@ -16,8 +16,9 @@ class Filter:
 
 
 class StartMenuOptions:
-    SD_SWITCH = (f"{glyphs.microsd} Switch SD", 0)
-    EXIT = (f"{glyphs.exit} Exit", 1)
+    ABORT_DOWNLOAD = (f"{glyphs.exit} Abort downloads", 0)
+    SD_SWITCH = (f"{glyphs.microsd} Switch SD", 1)
+    EXIT = (f"{glyphs.exit} Exit", 2)
 
 
 class Status:
@@ -53,7 +54,13 @@ class Status:
         self.collections_ready = threading.Event()
         self.roms_ready = threading.Event()
         self.download_rom_ready = threading.Event()
+        self.abort_download = threading.Event()
         self.me_ready = threading.Event()
+
+        # Initialize events what won't launch at startup
+        self.roms_ready.set()
+        self.download_rom_ready.set()
+        self.abort_download.set()
 
         self.multi_selected_roms = []
         self.download_queue = []

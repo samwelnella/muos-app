@@ -352,6 +352,17 @@ class API:
         self.__status.valid_credentials = True
         self.__status.roms_ready.set()
 
+    def _reset_download_status(self, valid_host=False, valid_credentials=False):
+        self.__status.total_downloaded_bytes = 0
+        self.__status.downloaded_percent = 0
+        self.__status.valid_host = valid_host
+        self.__status.valid_credentials = valid_credentials
+        self.__status.downloading_rom = None
+        self.__status.multi_selected_roms = []
+        self.__status.download_queue = []
+        self.__status.download_rom_ready.set()
+        self.__status.abort_download.set()
+
     def download_rom(self):
         self.__status.download_queue.sort(key=lambda rom: rom.name)
         for i, rom in enumerate(self.__status.download_queue):
@@ -367,69 +378,46 @@ class API:
             try:
                 request = Request(url, headers=self.__headers)
             except ValueError:
-                self.__status.total_downloaded_bytes = 0
-                self.__status.valid_host = False
-                self.__status.valid_credentials = False
-                self.__status.downloading_rom = None
-                self.__status.multi_selected_roms = []
-                self.__status.download_queue = []
-                self.__status.download_rom_ready.set()
+                self._reset_download_status()
                 return
             try:
                 if request.type not in ("http", "https"):
-                    self.__status.total_downloaded_bytes = 0
-                    self.__status.valid_host = False
-                    self.__status.valid_credentials = False
-                    self.__status.downloading_rom = None
-                    self.__status.multi_selected_roms = []
-                    self.__status.download_queue = []
-                    self.__status.download_rom_ready.set()
+                    self._reset_download_status()
                     return
                 with urlopen(request) as response, open(  # trunk-ignore(bandit/B310)
                     dest_path, "wb"
                 ) as out_file:
                     self.__status.total_downloaded_bytes = 0
                     chunk_size = 1024
+                    print(f"Can Downloading: {not self.__status.abort_download.is_set()}")
                     while True:
-                        chunk = response.read(chunk_size)
-                        if not chunk:
-                            break
-                        out_file.write(chunk)
-                        self.__status.valid_host = True
-                        self.__status.valid_credentials = True
-                        self.__status.total_downloaded_bytes += len(chunk)
-                        self.__status.downloaded_percent = (
-                            self.__status.total_downloaded_bytes
-                            / self.__status.downloading_rom.file_size_bytes
-                        ) * 100
+                        if not self.__status.abort_download.is_set():
+                            chunk = response.read(chunk_size)
+                            if not chunk:
+                                break
+                            out_file.write(chunk)
+                            self.__status.valid_host = True
+                            self.__status.valid_credentials = True
+                            self.__status.total_downloaded_bytes += len(chunk)
+                            self.__status.downloaded_percent = (
+                                self.__status.total_downloaded_bytes
+                                / self.__status.downloading_rom.file_size_bytes
+                            ) * 100
+                        else:
+                            self._reset_download_status(True, True)
+                            os.remove(dest_path)
+                            return
             except HTTPError as e:
                 if e.code == 403:
-                    self.__status.total_downloaded_bytes = 0
-                    self.__status.valid_host = True
-                    self.__status.valid_credentials = False
-                    self.__status.downloading_rom = None
-                    self.__status.multi_selected_roms = []
-                    self.__status.download_queue = []
-                    self.__status.download_rom_ready.set()
+                    self._reset_download_status(valid_host=True)
                     return
                 else:
                     raise
             except URLError:
-                self.__status.total_downloaded_bytes = 0
-                self.__status.valid_host = True
-                self.__status.valid_credentials = False
-                self.__status.downloading_rom = None
-                self.__status.multi_selected_roms = []
-                self.__status.download_queue = []
-                self.__status.download_rom_ready.set()
+                self._reset_download_status(valid_host=True)
                 return
         # End of download
-        self.__status.downloading_rom = None
-        self.__status.total_downloaded_bytes = 0
-        self.__status.downloaded_percent = 0
-        self.__status.multi_selected_roms = []
-        self.__status.download_queue = []
-        self.__status.download_rom_ready.set()
+        self._reset_download_status(valid_host=True, valid_credentials=True)
 
 
 MUOS_SUPPORTED_PLATFORMS = frozenset(
