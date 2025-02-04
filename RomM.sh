@@ -13,9 +13,9 @@ FONTS_DIR="/usr/share/fonts/romm"
 mkdir -p "${LOG_DIR}"
 
 # Check if icon exists
-if [[ ! -f "${ICON_DIR}/romm22x22.png" ]];
+if [[ ! -f "${ICON_DIR}/romm.png" ]];
 then
-    cp "${ROOT_DIR}/resources/romm22x22.png" "${ICON_DIR}/romm22x22.png"
+    cp "${ROOT_DIR}/resources/romm.png" "${ICON_DIR}/romm.png"
 fi
 
 # Check if fonts are installed

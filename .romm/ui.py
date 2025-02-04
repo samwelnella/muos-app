@@ -221,7 +221,7 @@ def draw_loader(percent):
 
 def draw_header(host, username):
     username = username if len(username) <= 22 else username[:19] + "..."
-    logo = Image.open(f"{fs.resources_path}/romm22x22.png")
+    logo = Image.open(f"{fs.resources_path}/romm.png")
     pos_logo = [15, 7]
     pos_text = [55, 9]
     activeImage.paste(
