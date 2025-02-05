@@ -31,6 +31,14 @@
 5. Copy the `RomM.sh` file and the `.romm` folder to `/mnt/mmc/MUOS/application`.
 6. Run the `RomM` application inside `muOS`.
 
+## Support
+
+If you have any issues with the app, please [open an issue](https://github.com/rommapp/muos-app/issues/new) in this repository. If the issue is with RomM itself, open an issue in the [RomM repository](https://github.com/rommapp/romm/issues/new/choose).
+
+Join us on discord, where you can ask questions, submit ideas, get help, showcase your collection, and discuss RomM with other users.
+
+[![discord-invite]][discord-invite-url]
+
 <!-- Badges -->
 
 [license-badge-img]: https://img.shields.io/github/license/rommapp/muos-app?style=for-the-badge&color=a32d2a
@@ -39,3 +47,8 @@
 [release-badge]: https://github.com/rommapp/muos-app/releases
 [discord-badge-img]: https://img.shields.io/badge/discord-7289da?style=for-the-badge
 [discord-badge]: https://discord.gg/P5HtHnhUDH
+
+<!-- Links -->
+
+[discord-invite]: https://invidget.switchblade.xyz/P5HtHnhUDH
+[discord-invite-url]: https://discord.gg/P5HtHnhUDH
