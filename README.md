@@ -20,7 +20,7 @@
 
 # Overview
 
-[muOS](https://muos.dev/) app to connect to your RomM instance and fetch games directly from your Anbernic device.
+This is a [muOS](https://muos.dev/) app to connects to your RomM instance and allows you to fetch games wirelessly from your Anbernic device.
 
 ## Installation
 
@@ -39,7 +39,7 @@ We leverate the muOS [Archive Manager](https://muos.dev/help/archive) to install
 
 If you have any issues with the app, please [open an issue](https://github.com/rommapp/muos-app/issues/new) in this repository. If the issue is with RomM itself, open an issue in the [RomM repository](https://github.com/rommapp/romm/issues/new/choose).
 
-Join us on discord, where you can ask questions, submit ideas, get help, showcase your collection, and discuss RomM with other users.
+Join us on Discord, where you can ask questions, submit ideas, get help, showcase your collection, and discuss RomM with other users. You can also find our team is the [muOS Discord](https://discord.com/invite/muos).
 
 [![discord-invite]][discord-invite-url]
 
