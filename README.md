@@ -20,18 +20,22 @@
 
 # Overview
 
-[muOS](https://muos.dev/) app to connect to your RomM instance and fetch games directly to your handheld.
+[muOS](https://muos.dev/) app to connect to your RomM instance and fetch games directly from your Anbernic device.
 
 ## Installation
 
-1. [Download the repository as a zip file](https://github.com/rommapp/muos-app/archive/refs/heads/main.zip).
-2. Extract the contents of the `muos-app-main.zip` file.
-3. Navigate to the `muos-app-main/muos-app-main` directory.
-4. Edit the `.env` file inside the `.romm` folder and add your RomM `host` (including protocol and port if needed, e.g., `http://my-romm-instance:8080`), `username`, and `password`.
-5. Copy the `RomM.sh` file and the `.romm` folder to `/mnt/mmc/MUOS/application`.
-6. Run the `RomM` application inside `muOS`.
+We leverate the muOS [Archive Manager](https://muos.dev/help/archive) to install/update the app.
+
+1. Head to the [latest release](https://github.com/rommapp/muos-app/releases/latest) and download the `romm_archive_install_x.x.x.zip` file.
+2. Move the **compressed** ZIP file to `/mnt/mmc/ARCHIVE` on your device.
+3. Launch the manager from `Applications > Archive Manager` and select `romm_archive_install_x.x.x.zip`.
+4. Once installed, edit `/mnt/mmc/MUOS/application/.romm/.env` (any method is fine, we recommend SSH) and set `HOST`, `USERNAME` and `PASSWORD`.
+5. Launch the app from `Applications > RomM` and start browsing your collection.
 
 ## Support
+
+> [!NOTE]
+> Your device must connect to your RomM instance or home server over Wi-Fi. The easiest method is to keep them on the same network and set HOST to the server's IP and the port where RomM is running. Advanced users or those using reverse proxies can configure their network and DNS settings as needed.
 
 If you have any issues with the app, please [open an issue](https://github.com/rommapp/muos-app/issues/new) in this repository. If the issue is with RomM itself, open an issue in the [RomM repository](https://github.com/rommapp/romm/issues/new/choose).
 
