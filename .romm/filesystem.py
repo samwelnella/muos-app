@@ -29,7 +29,10 @@ class Filesystem:
         return self.__sd2_rom_storage_path
 
     def get_sd1_storage_platform_path(self, platform):
-        return os.path.join(self.__sd1_rom_storage_path, MUOS_SUPPORTED_PLATFORMS_FS_MAP.get(platform, platform))
+        return os.path.join(
+            self.__sd1_rom_storage_path,
+            MUOS_SUPPORTED_PLATFORMS_FS_MAP.get(platform, platform),
+        )
 
     def get_sd2_storage_platform_path(self, platform):
         return os.path.join(self.__sd2_rom_storage_path, platform)
@@ -64,7 +67,12 @@ class Filesystem:
             return self.get_sd2_storage_platform_path(platform)
 
     def is_rom_in_device(self, rom):
-        return os.path.exists(os.path.join(self.get_sd_storage_platform_path(rom.platform_slug), rom.file_name))
+        return os.path.exists(
+            os.path.join(
+                self.get_sd_storage_platform_path(rom.platform_slug), rom.file_name
+            )
+        )
+
 
 MUOS_SUPPORTED_PLATFORMS_FS_MAP = {
     "acpc": "Amstrad",
@@ -82,7 +90,7 @@ MUOS_SUPPORTED_PLATFORMS_FS_MAP = {
     "chailove": "ChaiLove",
     "chip-8": "CHIP-8",
     "colecovision": "ColecoVision",
-    "amiga":"Commodore Amiga",
+    "amiga": "Commodore Amiga",
     "c128": "Commodore C128",
     "c64": "Commodore C64",
     "cbm-ii": "Commodore CBM-II",
@@ -126,11 +134,11 @@ MUOS_SUPPORTED_PLATFORMS_FS_MAP = {
     "openbor": "OpenBOR",
     "pico-8": "PICO-8",
     "philips-cd-i": "Philips CDi",
-    "quake":"Quake",
+    "quake": "Quake",
     "rpg-maker": "RPG Maker 2000 - 2003",
     "neogeoaes": "SNK Neo Geo",
     "neogeomvs": "SNK Neo Geo",
-    "neo-geo-cd":"SNK Neo Geo CD",
+    "neo-geo-cd": "SNK Neo Geo CD",
     "neo-geo-pocket": "SNK Neo Geo Pocket - Color",
     "neo-geo-pocket-color": "SNK Neo Geo Pocket - Color",
     "scummvm": "ScummVM",
@@ -158,8 +166,8 @@ MUOS_SUPPORTED_PLATFORMS_FS_MAP = {
     "vircon-32": "Vircon32",
     "wasm-4": "WASM-4",
     "watara-slash-quickshot-supervision": "Watara Supervision",
-    "wolfenstein-3d": "Wolfenstein 3D"
+    "wolfenstein-3d": "Wolfenstein 3D",
 }
 
-MUOS_SUPPORTED_PLATFORMS = set(MUOS_SUPPORTED_PLATFORMS_FS_MAP.keys())
-MUOS_SUPPORTED_PLATFORMS_FS = set(MUOS_SUPPORTED_PLATFORMS_FS_MAP.values())
+MUOS_SUPPORTED_PLATFORMS = frozenset(MUOS_SUPPORTED_PLATFORMS_FS_MAP.keys())
+MUOS_SUPPORTED_PLATFORMS_FS = frozenset(MUOS_SUPPORTED_PLATFORMS_FS_MAP.values())

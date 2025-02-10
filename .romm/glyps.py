@@ -1,6 +1,5 @@
-from collections import namedtuple
 import itertools
-
+from collections import namedtuple
 
 glyphs = namedtuple(
     "Glyphs",

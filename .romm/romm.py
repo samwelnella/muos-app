@@ -1,15 +1,15 @@
+import os
 import sys
 import threading
 import time
-import os
 
 import ui
+from __version__ import version
+from api import API
 from filesystem import Filesystem
 from glyps import glyphs
-from api import API
 from input import Input
-from status import Status, View, StartMenuOptions, Filter
-from __version__ import version
+from status import Filter, StartMenuOptions, Status, View
 
 
 class RomM:
@@ -135,7 +135,9 @@ class RomM:
             if current_time - self.last_spinner_update >= self.spinner_speed:
                 self.last_spinner_update = current_time
                 self.current_spinner_status = next(glyphs.spinner)
-            ui.draw_log(text_line_1=f"{self.current_spinner_status} Fetching collections")
+            ui.draw_log(
+                text_line_1=f"{self.current_spinner_status} Fetching collections"
+            )
         elif (
             not self.status.download_rom_ready.is_set() and self.status.downloading_rom
         ):
@@ -612,6 +614,7 @@ def main():
         romm.update()
         # Add a small sleep to prevent 100% CPU usage
         time.sleep(0.01)
+
 
 if __name__ == "__main__":
     main()

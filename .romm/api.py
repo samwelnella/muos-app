@@ -8,10 +8,10 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
-from filesystem import Filesystem, MUOS_SUPPORTED_PLATFORMS
-from status import Status, View
 from dotenv import load_dotenv
+from filesystem import MUOS_SUPPORTED_PLATFORMS, Filesystem
 from PIL import Image
+from status import Status, View
 
 # Load .env file from one folder above
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -389,7 +389,9 @@ class API:
                 ) as out_file:
                     self.__status.total_downloaded_bytes = 0
                     chunk_size = 1024
-                    print(f"Can Downloading: {not self.__status.abort_download.is_set()}")
+                    print(
+                        f"Can Downloading: {not self.__status.abort_download.is_set()}"
+                    )
                     while True:
                         if not self.__status.abort_download.is_set():
                             chunk = response.read(chunk_size)

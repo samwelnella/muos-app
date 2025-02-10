@@ -13,39 +13,33 @@ FONTS_DIR="/usr/share/fonts/romm"
 mkdir -p "${LOG_DIR}"
 
 # Check if icon exists
-if [[ ! -f "${ICON_DIR}/romm.png" ]];
-then
-    cp "${ROOT_DIR}/resources/romm.png" "${ICON_DIR}/romm.png"
+if [[ ! -f "${ICON_DIR}/romm.png" ]]; then
+	cp "${ROOT_DIR}/resources/romm.png" "${ICON_DIR}/romm.png"
 fi
 
 # Check if fonts are installed
-if [[ ! -f "${FONTS_DIR}/romm.ttf" ]];
-then
-    mkdir -p "${FONTS_DIR}"
-    cp "${ROOT_DIR}/fonts/romm.ttf" "${FONTS_DIR}/romm.ttf"
+if [[ ! -f "${FONTS_DIR}/romm.ttf" ]]; then
+	mkdir -p "${FONTS_DIR}"
+	cp "${ROOT_DIR}/fonts/romm.ttf" "${FONTS_DIR}/romm.ttf"
 fi
 
 # Check if pip is installed
-if ! command -v pip3 &> /dev/null
-then
-    python3 -m ensurepip --default-pip
+if ! command -v pip3 &>/dev/null; then
+	python3 -m ensurepip --default-pip
 fi
 
 # Check if pillow is installed
-if ! python3 -c "import PIL" &> /dev/null
-then
-    pip3 install pillow
+if ! python3 -c "import PIL" &>/dev/null; then
+	pip3 install pillow
 fi
 
 # Check if dotenv is installed
-if ! python3 -c "import dotenv" &> /dev/null
-then
-    pip3 install python-dotenv
+if ! python3 -c "import dotenv" &>/dev/null; then
+	pip3 install python-dotenv
 fi
-
 
 cd "${ROOT_DIR}" || exit
 
 ENTRYPOINT="python3 romm.py"
 
-${ENTRYPOINT} > "${LOG_DIR}/$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1
+${ENTRYPOINT} >"${LOG_DIR}/$(date +'%Y-%m-%d_%H-%M-%S').log" 2>&1

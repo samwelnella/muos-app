@@ -2,7 +2,7 @@ import struct
 import threading
 
 
-class Input():
+class Input:
     _instance = None
 
     def __new__(cls):
@@ -44,7 +44,9 @@ class Input():
                             kvalue = -1
                         with self.input_lock:
                             self.key_code = kcode
-                            self.key_name = self.key_mapping.get(self.key_code, str(self.key_code))
+                            self.key_name = self.key_mapping.get(
+                                self.key_code, str(self.key_code)
+                            )
                             self.key_value = kvalue
 
     def key(self, key_name, key_value=99):
