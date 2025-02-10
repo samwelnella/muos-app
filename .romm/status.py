@@ -1,5 +1,6 @@
-import threading
 import itertools
+import threading
+
 from glyps import glyphs
 
 

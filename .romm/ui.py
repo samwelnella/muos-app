@@ -1,12 +1,11 @@
 import mmap
 import os
-import time
-from filesystem import Filesystem
-from glyps import glyphs
-from status import Status
 from fcntl import ioctl
 
+from filesystem import Filesystem
+from glyps import glyphs
 from PIL import Image, ImageDraw, ImageFont
+from status import Status
 
 fb: any
 mm: any
