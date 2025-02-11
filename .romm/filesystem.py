@@ -1,8 +1,9 @@
 import os
 
+from .models import Rom
 
 class Filesystem:
-    _instance = None
+    _instance: "Filesystem" | None = None
 
     def __new__(cls):
         if not cls._instance:
@@ -22,31 +23,31 @@ class Filesystem:
             raise Exception(f"Invalid default SD card: {self.__current_sd}")
         self.resources_path = "/mnt/mmc/MUOS/application/.romm/resources"
 
-    def get_sd1_storage_path(self):
+    def get_sd1_storage_path(self) -> str:
         return self.__sd1_rom_storage_path
 
-    def get_sd2_storage_path(self):
+    def get_sd2_storage_path(self) -> str:
         return self.__sd2_rom_storage_path
 
-    def get_sd1_storage_platform_path(self, platform):
+    def get_sd1_storage_platform_path(self, platform: str) -> str:
         return os.path.join(
             self.__sd1_rom_storage_path,
             MUOS_SUPPORTED_PLATFORMS_FS_MAP.get(platform, platform),
         )
 
-    def get_sd2_storage_platform_path(self, platform):
+    def get_sd2_storage_platform_path(self, platform: str) -> str:
         return os.path.join(self.__sd2_rom_storage_path, platform)
 
-    def set_sd_storage(self, sd):
+    def set_sd_storage(self, sd: int) -> None:
         if sd == 1:
             self.__current_sd = sd
         elif sd == 2 and os.path.exists(self.__sd2_rom_storage_path):
             self.__current_sd = sd
 
-    def get_sd_storage(self):
+    def get_sd_storage(self) -> int:
         return self.__current_sd
 
-    def switch_sd_storage(self):
+    def switch_sd_storage(self) -> None:
         if self.__current_sd == 1:
             if not os.path.exists(self.__sd2_rom_storage_path):
                 os.mkdir(self.__sd2_rom_storage_path)
@@ -54,19 +55,19 @@ class Filesystem:
         else:
             self.__current_sd = 1
 
-    def get_sd_storage_path(self):
+    def get_sd_storage_path(self) -> str:
         if self.__current_sd == 1:
             return self.get_sd1_storage_path()
         else:
             return self.get_sd2_storage_path()
 
-    def get_sd_storage_platform_path(self, platform):
+    def get_sd_storage_platform_path(self, platform: str) -> str:
         if self.__current_sd == 1:
             return self.get_sd1_storage_platform_path(platform)
         else:
             return self.get_sd2_storage_platform_path(platform)
 
-    def is_rom_in_device(self, rom):
+    def is_rom_in_device(self, rom: Rom) -> bool:
         return os.path.exists(
             os.path.join(
                 self.get_sd_storage_platform_path(rom.platform_slug), rom.file_name

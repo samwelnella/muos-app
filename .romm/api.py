@@ -2,49 +2,33 @@ import base64
 import json
 import math
 import os
-from collections import namedtuple
-from os import makedirs
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
+from PIL import Image
+from typing import Tuple
 
 from dotenv import load_dotenv
 from filesystem import MUOS_SUPPORTED_PLATFORMS, Filesystem
-from PIL import Image
 from status import Status, View
+from models import Collection, Platform, Rom
 
 # Load .env file from one folder above
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-Rom = namedtuple(
-    "Rom",
-    [
-        "id",
-        "name",
-        "file_name",
-        "platform_slug",
-        "file_extension",
-        "file_size",
-        "file_size_bytes",
-    ],
-)
-Collection = namedtuple("Collection", ["id", "name", "rom_count"])
-Platform = namedtuple("Platform", ["id", "display_name", "slug", "rom_count"])
-
-
 class API:
+    _platforms_endpoint = "api/platforms"
+    _platform_icon_url = "assets/platforms"
+    _collections_endpoint = "api/collections"
+    _roms_endpoint = "api/roms"
+    _user_me_endpoint = "api/users/me"
+    _user_profile_picture_url = "assets/romm/assets"
 
     def __init__(self):
         self.host = os.getenv("HOST", "")
-        self.__platforms_endpoint = "api/platforms"
-        self.__platform_icon_url = "assets/platforms"
-        self.__collections_endpoint = "api/collections"
-        self.__roms_endpoint = "api/roms"
-        self.__user_me_endpoint = "api/users/me"
-        self.__user_profile_picture_url = "assets/romm/assets"
         self.username = os.getenv("USERNAME", "")
-        self.__password = os.getenv("PASSWORD", "")
-        self.__credentials = f"{self.username}:{self.__password}"
+        self.password = os.getenv("PASSWORD", "")
+        self.__credentials = f"{self.username}:{self.password}"
         self.__auth_token = base64.b64encode(self.__credentials.encode("utf-8")).decode(
             "utf-8"
         )
@@ -56,7 +40,7 @@ class API:
         self.__fs = Filesystem()
 
     @staticmethod
-    def _human_readable_size(size_bytes):
+    def _human_readable_size(size_bytes: int) -> Tuple[float, str]:
         if size_bytes == 0:
             return "0B"
         size_name = ("B", "KB", "MB", "GB")
@@ -65,11 +49,11 @@ class API:
         s = round(size_bytes / p, 2)
         return (s, size_name[i])
 
-    def _fetch_user_profile_picture(self, avatar_path):
+    def _fetch_user_profile_picture(self, avatar_path: str) -> None:
         file_extension = avatar_path.split(".")[-1]
         try:
             request = Request(
-                f"{self.host}/{self.__user_profile_picture_url}/{avatar_path}",
+                f"{self.host}/{self._user_profile_picture_url}/{avatar_path}",
                 headers=self.__headers,
             )
         except ValueError as e:
@@ -97,7 +81,7 @@ class API:
             self.__status.valid_credentials = False
             return
         if not os.path.exists(self.__fs.resources_path):
-            makedirs(self.__fs.resources_path)
+            os.makedirs(self.__fs.resources_path)
         self.__status.profile_pic_path = (
             f"{self.__fs.resources_path}/{self.username}.{file_extension}"
         )
@@ -112,7 +96,7 @@ class API:
     def fetch_me(self):
         try:
             request = Request(
-                f"{self.host}/{self.__user_me_endpoint}", headers=self.__headers
+                f"{self.host}/{self._user_me_endpoint}", headers=self.__headers
             )
         except ValueError as e:
             print(e)
@@ -147,7 +131,7 @@ class API:
     def _fetch_platform_icon(self, platform_slug):
         try:
             request = Request(
-                f"{self.host}/{self.__platform_icon_url}/{platform_slug}.ico",
+                f"{self.host}/{self._platform_icon_url}/{platform_slug}.ico",
                 headers=self.__headers,
             )
         except ValueError as e:
@@ -175,7 +159,7 @@ class API:
             self.__status.valid_credentials = False
             return
         if not os.path.exists(self.__fs.resources_path):
-            makedirs(self.__fs.resources_path)
+            os.makedirs(self.__fs.resources_path)
         with open(f"{self.__fs.resources_path}/{platform_slug}.ico", "wb") as f:
             f.write(response.read())
         icon = Image.open(f"{self.__fs.resources_path}/{platform_slug}.ico")
@@ -187,7 +171,7 @@ class API:
     def fetch_platforms(self):
         try:
             request = Request(
-                f"{self.host}/{self.__platforms_endpoint}", headers=self.__headers
+                f"{self.host}/{self._platforms_endpoint}", headers=self.__headers
             )
         except ValueError:
             self.__status.platforms = []
@@ -244,7 +228,7 @@ class API:
     def fetch_collections(self):
         try:
             request = Request(
-                f"{self.host}/{self.__collections_endpoint}", headers=self.__headers
+                f"{self.host}/{self._collections_endpoint}", headers=self.__headers
             )
         except ValueError:
             self.__status.collections = []
@@ -304,7 +288,7 @@ class API:
 
         try:
             request = Request(
-                f"{self.host}/{self.__roms_endpoint}?{view}_id={id}&order_by=name&order_dir=asc",
+                f"{self.host}/{self._roms_endpoint}?{view}_id={id}&order_by=name&order_dir=asc",
                 headers=self.__headers,
             )
         except ValueError:
@@ -372,8 +356,8 @@ class API:
                 self.__fs.get_sd_storage_platform_path(rom.platform_slug),
                 rom.file_name,
             )
-            url = f"{self.host}/{self.__roms_endpoint}/{rom.id}/content/{quote(rom.file_name)}"
-            makedirs(os.path.dirname(dest_path), exist_ok=True)
+            url = f"{self.host}/{self._roms_endpoint}/{rom.id}/content/{quote(rom.file_name)}"
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
             try:
                 request = Request(url, headers=self.__headers)

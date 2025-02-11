@@ -1,18 +1,22 @@
-import struct
-import threading
-
+from struct import unpack
+from threading import Lock
 
 class Input:
-    _instance = None
+    _instance: "Input" | None = None
+    key_code: int
+    key_name: str
+    key_value: int
+    key_mapping: dict[int, str]
+    input_lock: Lock
 
     def __new__(cls):
         if not cls._instance:
             cls._instance = super(Input, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.key_code = 0
-        self.key_name = ""
+        self.key_name= ""
         self.key_value = 0
         self.key_mapping = {
             304: "A",
@@ -31,14 +35,14 @@ class Input:
             114: "V+",
             115: "V-",
         }
-        self.input_lock = threading.Lock()
+        self.input_lock = Lock()
 
-    def check(self):
+    def check(self) -> None:
         with open("/dev/input/event1", "rb") as f:
             while True:
                 event = f.read(24)
                 if event:
-                    (_, _, _, kcode, kvalue) = struct.unpack("llHHI", event)
+                    (_, _, _, kcode, kvalue) = unpack("llHHI", event)
                     if kvalue != 0:
                         if kvalue != 1:
                             kvalue = -1
@@ -49,7 +53,7 @@ class Input:
                             )
                             self.key_value = kvalue
 
-    def key(self, key_name, key_value=99):
+    def key(self, key_name: str, key_value: int = 99) -> bool:
         if self.key_name == key_name:
             if key_value != 99:
                 return self.key_value == key_value
@@ -57,7 +61,7 @@ class Input:
             return True
         return False
 
-    def handle_navigation(self, selected_position, items_per_page, total_items):
+    def handle_navigation(self, selected_position: int, items_per_page :int, total_items: int) -> int:
         if self.key("DY"):
             if self.key_value == 1:
                 if selected_position == total_items - 1:
@@ -114,7 +118,7 @@ class Input:
             self.reset_input()
         return selected_position
 
-    def reset_input(self):
+    def reset_input(self) -> None:
         with self.input_lock:
             self.key_name = ""
             self.key_value = 0
