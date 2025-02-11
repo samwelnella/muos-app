@@ -18,7 +18,7 @@ class RomM:
     start_menu_options = [
         value
         for name, value in StartMenuOptions.__dict__.items()
-        if not name.startswith("__")
+        if not name.startswith("_")
     ]
 
     def __init__(self) -> None:
