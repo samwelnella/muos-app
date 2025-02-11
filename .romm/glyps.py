@@ -1,7 +1,7 @@
 import itertools
 from collections import namedtuple
 
-glyphs = namedtuple(
+Glyphs = namedtuple(
     "Glyphs",
     [
         "host",
@@ -17,7 +17,9 @@ glyphs = namedtuple(
         "delete",
         "exit",
     ],
-)(
+)
+
+glyphs = Glyphs(
     host="\uf000",
     user="\uf001",
     download="\uf00b",
