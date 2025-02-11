@@ -1,9 +1,10 @@
 from struct import unpack
 from threading import Lock
+from typing import Optional
 
 
 class Input:
-    _instance: "Input" | None = None
+    _instance: Optional["Input"] = None
     _key_mapping = {
         304: "A",
         305: "B",

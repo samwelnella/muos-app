@@ -1,5 +1,6 @@
 import itertools
 import threading
+from typing import Optional
 
 from glyps import glyphs
 from models import Collection, Platform, Rom
@@ -24,7 +25,7 @@ class StartMenuOptions:
 
 
 class Status:
-    _instance: "Status" | None = None
+    _instance: Optional["Status"] = None
 
     def __new__(cls):
         if not cls._instance:
@@ -39,8 +40,8 @@ class Status:
         self.profile_pic_path = ""
 
         self.current_view: str = View.PLATFORMS
-        self.selected_platform: Platform | None = None
-        self.selected_collection: Collection | None = None
+        self.selected_platform: Optional[Platform] = None
+        self.selected_collection: Optional[Collection] = None
 
         self.show_start_menu = False
         self.show_contextual_menu = False
@@ -66,7 +67,7 @@ class Status:
 
         self.multi_selected_roms: list[Rom] = []
         self.download_queue: list[Rom] = []
-        self.downloading_rom: Rom | None = None
+        self.downloading_rom: Optional[Rom] = None
         self.downloading_rom_position = 0
         self.total_downloaded_bytes = 0
         self.downloaded_percent = 0

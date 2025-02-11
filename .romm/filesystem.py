@@ -1,10 +1,11 @@
 import os
+from typing import Optional
 
-from .models import Rom
+from models import Rom
 
 
 class Filesystem:
-    _instance: "Filesystem" | None = None
+    _instance: Optional["Filesystem"]= None
     _sd1_rom_storage_path = "/mnt/mmc/roms"
     _sd2_rom_storage_path = "/mnt/sdcard/roms"
     resources_path = "/mnt/mmc/MUOS/application/.romm/resources"
