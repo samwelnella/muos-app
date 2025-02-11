@@ -43,7 +43,7 @@ class API:
     @staticmethod
     def _human_readable_size(size_bytes: int) -> Tuple[float, str]:
         if size_bytes == 0:
-            return "0B"
+            return 0, "B"
         size_name = ("B", "KB", "MB", "GB")
         i = int(math.floor(math.log(size_bytes, 1024)))
         p = math.pow(1024, i)
@@ -94,7 +94,7 @@ class API:
         self.__status.valid_host = True
         self.__status.valid_credentials = True
 
-    def fetch_me(self):
+    def fetch_me(self) -> None:
         try:
             request = Request(
                 f"{self.host}/{self._user_me_endpoint}", headers=self.__headers
@@ -129,7 +129,7 @@ class API:
             self._fetch_user_profile_picture(me["avatar_path"])
         self.__status.me_ready.set()
 
-    def _fetch_platform_icon(self, platform_slug):
+    def _fetch_platform_icon(self, platform_slug) -> None:
         try:
             request = Request(
                 f"{self.host}/{self._platform_icon_url}/{platform_slug}.ico",
@@ -169,7 +169,7 @@ class API:
         self.__status.valid_host = True
         self.__status.valid_credentials = True
 
-    def fetch_platforms(self):
+    def fetch_platforms(self) -> None:
         try:
             request = Request(
                 f"{self.host}/{self._platforms_endpoint}", headers=self.__headers
@@ -200,7 +200,7 @@ class API:
             self.__status.valid_credentials = False
             return
         platforms = json.loads(response.read().decode("utf-8"))
-        __platforms = []
+        __platforms: list[Platform] = []
         for platform in platforms:
             if platform["rom_count"] > 0:
                 if (
@@ -226,7 +226,7 @@ class API:
         self.__status.valid_credentials = True
         self.__status.platforms_ready.set()
 
-    def fetch_collections(self):
+    def fetch_collections(self) -> None:
         try:
             request = Request(
                 f"{self.host}/{self._collections_endpoint}", headers=self.__headers
@@ -257,7 +257,7 @@ class API:
             self.__status.valid_credentials = False
             return
         collections = json.loads(response.read().decode("utf-8"))
-        __collections = []
+        __collections: list[Collection] = []
         for collection in collections:
             if collection["rom_count"] > 0:
                 if self.__include_collections:
@@ -279,13 +279,15 @@ class API:
         self.__status.valid_credentials = True
         self.__status.collections_ready.set()
 
-    def fetch_roms(self):
+    def fetch_roms(self) -> None:
         if self.__status.selected_platform:
             view = View.PLATFORMS
             id = self.__status.selected_platform.id
         elif self.__status.selected_collection:
             view = View.COLLECTIONS
             id = self.__status.selected_collection.id
+        else:
+            return
 
         try:
             request = Request(
@@ -337,7 +339,9 @@ class API:
         self.__status.valid_credentials = True
         self.__status.roms_ready.set()
 
-    def _reset_download_status(self, valid_host=False, valid_credentials=False):
+    def _reset_download_status(
+        self, valid_host: bool = False, valid_credentials: bool = False
+    ) -> None:
         self.__status.total_downloaded_bytes = 0
         self.__status.downloaded_percent = 0
         self.__status.valid_host = valid_host
@@ -348,7 +352,7 @@ class API:
         self.__status.download_rom_ready.set()
         self.__status.abort_download.set()
 
-    def download_rom(self):
+    def download_rom(self) -> None:
         self.__status.download_queue.sort(key=lambda rom: rom.name)
         for i, rom in enumerate(self.__status.download_queue):
             self.__status.downloading_rom = rom

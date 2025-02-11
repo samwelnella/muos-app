@@ -14,7 +14,7 @@ class Filesystem:
             cls._instance = super(Filesystem, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._current_sd = int(
             os.getenv(
                 "DEFAULT_SD_CARD",

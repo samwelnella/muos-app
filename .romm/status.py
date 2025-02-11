@@ -2,6 +2,7 @@ import itertools
 import threading
 
 from glyps import glyphs
+from models import Collection, Platform, Rom
 
 
 class View:
@@ -30,24 +31,24 @@ class Status:
             cls._instance = super(Status, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.valid_host = True
         self.valid_credentials = True
 
         self.me = None
         self.profile_pic_path = ""
 
-        self.current_view = View.PLATFORMS
-        self.selected_platform = None
-        self.selected_collection = None
+        self.current_view: str = View.PLATFORMS
+        self.selected_platform: Platform | None = None
+        self.selected_collection: Collection | None = None
 
         self.show_start_menu = False
         self.show_contextual_menu = False
 
-        self.platforms = []
-        self.collections = []
-        self.roms = []
-        self.roms_to_show = []
+        self.platforms: list[Platform] = []
+        self.collections: list[Collection] = []
+        self.roms: list[Rom] = []
+        self.roms_to_show: list[Rom] = []
         self.filters = itertools.cycle([Filter.ALL, Filter.LOCAL, Filter.REMOTE])
         self.current_filter = next(self.filters)
 
@@ -63,9 +64,9 @@ class Status:
         self.download_rom_ready.set()
         self.abort_download.set()
 
-        self.multi_selected_roms = []
-        self.download_queue = []
-        self.downloading_rom = None
+        self.multi_selected_roms: list[Rom] = []
+        self.download_queue: list[Rom] = []
+        self.downloading_rom: Rom | None = None
         self.downloading_rom_position = 0
         self.total_downloaded_bytes = 0
         self.downloaded_percent = 0

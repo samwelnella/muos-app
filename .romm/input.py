@@ -27,7 +27,7 @@ class Input:
             cls._instance = super(Input, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._key_code = 0
         self._key_name = ""
         self._key_value = 0
@@ -44,7 +44,7 @@ class Input:
                             kvalue = -1
                         with self._input_lock:
                             self._key_code = kcode
-                            self._key_name = self.key_mapping.get(
+                            self._key_name = self._key_mapping.get(
                                 self._key_code, str(self._key_code)
                             )
                             self._key_value = kvalue
