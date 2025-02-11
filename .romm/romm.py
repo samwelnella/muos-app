@@ -2,6 +2,7 @@ import os
 import sys
 import threading
 import time
+from typing import Tuple
 
 import ui
 from __version__ import version
@@ -13,19 +14,20 @@ from status import Filter, StartMenuOptions, Status, View
 
 
 class RomM:
+    spinner_speed = 0.05
+    start_menu_options: Tuple[str, int] = [
+        value
+        for name, value in StartMenuOptions.__dict__.items()
+        if not name.startswith("__")
+    ]
+
     def __init__(self):
         self.api = API()
         self.fs = Filesystem()
         self.input = Input()
         self.status = Status()
 
-        self.start_menu_options = [
-            value
-            for name, value in StartMenuOptions.__dict__.items()
-            if not name.startswith("__")
-        ]
         self.contextual_menu_options = []
-
         self.start_menu_selected_position = 0
         self.contextual_menu_selected_position = 0
         self.platforms_selected_position = 0
@@ -37,7 +39,6 @@ class RomM:
         self.max_n_roms = 10
 
         self.last_spinner_update = time.time()
-        self.spinner_speed = 0.05
         self.current_spinner_status = next(glyphs.spinner)
 
     def _render_platforms_view(self):
@@ -606,7 +607,6 @@ class RomM:
 
 
 def main():
-
     romm = RomM()
     romm.start()
 

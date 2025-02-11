@@ -7,8 +7,8 @@ from glyps import glyphs
 from PIL import Image, ImageDraw, ImageFont
 from status import Status
 
-fb: any
-mm: any
+fb: int
+mm: mmap.mmap
 screen_width = 640
 screen_height = 480
 bytes_per_pixel = 4

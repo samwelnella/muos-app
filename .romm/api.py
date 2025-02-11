@@ -2,19 +2,20 @@ import base64
 import json
 import math
 import os
+from typing import Tuple
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
-from PIL import Image
-from typing import Tuple
 
 from dotenv import load_dotenv
 from filesystem import MUOS_SUPPORTED_PLATFORMS, Filesystem
-from status import Status, View
 from models import Collection, Platform, Rom
+from PIL import Image
+from status import Status, View
 
 # Load .env file from one folder above
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+
 
 class API:
     _platforms_endpoint = "api/platforms"

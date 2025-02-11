@@ -23,7 +23,7 @@ class StartMenuOptions:
 
 
 class Status:
-    _instance = None
+    _instance: "Status" | None = None
 
     def __new__(cls):
         if not cls._instance:
@@ -70,5 +70,5 @@ class Status:
         self.total_downloaded_bytes = 0
         self.downloaded_percent = 0
 
-    def reset_roms_list(self):
+    def reset_roms_list(self) -> None:
         self.roms = []
