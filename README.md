@@ -47,7 +47,7 @@ Join us on Discord, where you can ask questions, submit ideas, get help, showcas
 
 [license-badge-img]: https://img.shields.io/github/license/rommapp/muos-app?style=for-the-badge&color=a32d2a
 [license-badge]: LICENSE
-[release-badge-img]: https://img.shields.io/github/v/release/muos-app/romm?style=for-the-badge
+[release-badge-img]: https://img.shields.io/github/v/release/rommapp/muos-app?style=for-the-badge
 [release-badge]: https://github.com/rommapp/muos-app/releases
 [discord-badge-img]: https://img.shields.io/badge/discord-7289da?style=for-the-badge
 [discord-badge]: https://discord.gg/P5HtHnhUDH
