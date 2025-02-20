@@ -444,7 +444,7 @@ class RomM:
         gap = 3
         title = "Main menu"
         title_x_adjustement = 35
-        version_x_adjustement = 50
+        version_x_adjustement = 50 / 6 * (len(version) + 2)
         version_height = 20
         ui.draw_menu_background(
             pos,
