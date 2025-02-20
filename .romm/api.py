@@ -89,7 +89,7 @@ class API:
         with open(self._status.profile_pic_path, "wb") as f:
             f.write(response.read())
         icon = Image.open(self._status.profile_pic_path)
-        icon = icon.resize((30, 30))
+        icon = icon.resize((26, 26))
         icon.save(self._status.profile_pic_path)
         self._status.valid_host = True
         self._status.valid_credentials = True
