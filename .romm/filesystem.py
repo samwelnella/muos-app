@@ -72,7 +72,7 @@ class Filesystem:
     def is_rom_in_device(self, rom: Rom) -> bool:
         return os.path.exists(
             os.path.join(
-                self.get_sd_storage_platform_path(rom.platform_slug), rom.file_name
+                self.get_sd_storage_platform_path(rom.platform_slug), rom.fs_name
             )
         )
 

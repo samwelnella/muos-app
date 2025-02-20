@@ -319,10 +319,10 @@ def draw_roms_list(
         is_in_device = fs.is_rom_in_device(r)
         sync_flag_text = f"{glyphs.cloud_sync}" if is_in_device else ""
         row_text = (
-            f"{r.name} [{r.file_size[0]}{r.file_size[1]}] {sync_flag_text}"
+            f"{r.name} [{r.fs_size[0]}{r.fs_size[1]}] {sync_flag_text}"
             if len(r.name) <= max_len_text
             else r.name[:max_len_text]
-            + f"... [{r.file_size[0]}{r.file_size[1]}] {sync_flag_text}"
+            + f"... [{r.fs_size[0]}{r.fs_size[1]}] {sync_flag_text}"
         )
         row_text = f"{glyphs.checkbox_selected if r in multi_selected_roms else glyphs.checkbox} {row_text}"
         row_list(

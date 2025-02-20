@@ -51,7 +51,7 @@ class API:
         return (s, size_name[i])
 
     def _fetch_user_profile_picture(self, avatar_path: str) -> None:
-        file_extension = avatar_path.split(".")[-1]
+        fs_extension = avatar_path.split(".")[-1]
         try:
             request = Request(
                 f"{self.host}/{self._user_profile_picture_url}/{avatar_path}",
@@ -84,7 +84,7 @@ class API:
         if not os.path.exists(self._file_system.resources_path):
             os.makedirs(self._file_system.resources_path)
         self._status.profile_pic_path = (
-            f"{self._file_system.resources_path}/{self.username}.{file_extension}"
+            f"{self._file_system.resources_path}/{self.username}.{fs_extension}"
         )
         with open(self._status.profile_pic_path, "wb") as f:
             f.write(response.read())
@@ -324,11 +324,11 @@ class API:
             Rom(
                 id=rom["id"],
                 name=rom["name"],
-                file_name=rom["file_name"],
+                fs_name=rom["fs_name"],
                 platform_slug=rom["platform_slug"],
-                file_extension=rom["file_extension"],
-                file_size=self._human_readable_size(rom["file_size_bytes"]),
-                file_size_bytes=rom["file_size_bytes"],
+                fs_extension=rom["fs_extension"],
+                fs_size=self._human_readable_size(rom["fs_size_bytes"]),
+                fs_size_bytes=rom["fs_size_bytes"],
             )
             for rom in roms
             if rom["platform_slug"] in MUOS_SUPPORTED_PLATFORMS
@@ -359,9 +359,9 @@ class API:
             self._status.downloading_rom_position = i + 1
             dest_path = os.path.join(
                 self._file_system.get_sd_storage_platform_path(rom.platform_slug),
-                rom.file_name,
+                rom.fs_name,
             )
-            url = f"{self.host}/{self._roms_endpoint}/{rom.id}/content/{quote(rom.file_name)}"
+            url = f"{self.host}/{self._roms_endpoint}/{rom.id}/content/{quote(rom.fs_name)}"
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
             try:
@@ -392,7 +392,7 @@ class API:
                             self._status.total_downloaded_bytes += len(chunk)
                             self._status.downloaded_percent = (
                                 self._status.total_downloaded_bytes
-                                / self._status.downloading_rom.file_size_bytes
+                                / self._status.downloading_rom.fs_size_bytes
                             ) * 100
                         else:
                             self._reset_download_status(True, True)

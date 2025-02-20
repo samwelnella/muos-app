@@ -59,7 +59,7 @@ class RomM:
             ui.draw_loader(self.status.downloaded_percent)
             ui.draw_log(
                 text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
-                text_line_2=f"({self.status.downloading_rom.file_name})",
+                text_line_2=f"({self.status.downloading_rom.fs_name})",
                 background=False,
             )
         elif not self.status.valid_host:
@@ -145,7 +145,7 @@ class RomM:
             ui.draw_loader(self.status.downloaded_percent)
             ui.draw_log(
                 text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
-                text_line_2=f"({self.status.downloading_rom.file_name})",
+                text_line_2=f"({self.status.downloading_rom.fs_name})",
                 background=False,
             )
         elif not self.status.valid_host:
@@ -259,7 +259,7 @@ class RomM:
             ui.draw_loader(self.status.downloaded_percent)
             ui.draw_log(
                 text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
-                text_line_2=f"({self.status.downloading_rom.file_name})",
+                text_line_2=f"({self.status.downloading_rom.fs_name})",
                 background=False,
             )
         elif not self.status.valid_host:
@@ -355,7 +355,7 @@ class RomM:
                         self.fs.get_sd_storage_platform_path(
                             selected_rom.platform_slug
                         ),
-                        selected_rom.file_name,
+                        selected_rom.fs_name,
                     )
                 )
                 if is_in_device:
@@ -372,7 +372,7 @@ class RomM:
                                     ),
                                     self.status.roms_to_show[
                                         self.roms_selected_position
-                                    ].file_name,
+                                    ].fs_name,
                                 )
                             ),
                         ),
