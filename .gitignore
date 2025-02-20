@@ -2,3 +2,5 @@ __pycache__/
 .venv
 .romm/.env
 .DS_Store
+.build
+.dist
