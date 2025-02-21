@@ -36,4 +36,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: romm_muOS_install_${{ env.version }}.zip
-          path: .dist/
+          path: .dist/romm_muOS_install_${{ env.version }}.zip
