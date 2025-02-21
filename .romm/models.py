@@ -11,6 +11,10 @@ Rom = namedtuple(
         "fs_size",
         "fs_size_bytes",
         "multi",
+        "languages",
+        "regions",
+        "revision",
+        "tags",
     ],
 )
 Collection = namedtuple("Collection", ["id", "name", "rom_count"])

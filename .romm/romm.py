@@ -240,7 +240,7 @@ class RomM:
             len(self.status.roms_to_show) + self.max_n_roms - 1
         ) // self.max_n_roms
         current_page = (self.roms_selected_position // self.max_n_roms) + 1
-        header_text += f" [{current_page}/{total_pages}]"
+        header_text += f" [{current_page if total_pages > 0 else 0}/{total_pages}]"
         if self.status.current_filter == Filter.ALL:
             self.status.roms_to_show = self.status.roms
         elif self.status.current_filter == Filter.LOCAL:

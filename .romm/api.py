@@ -331,6 +331,10 @@ class API:
                 fs_size=self._human_readable_size(rom["fs_size_bytes"]),
                 fs_size_bytes=rom["fs_size_bytes"],
                 multi=rom["multi"],
+                languages=rom["languages"],
+                regions=rom["regions"],
+                revision=rom["revision"],
+                tags=rom["tags"],
             )
             for rom in roms
             if rom["platform_slug"] in MUOS_SUPPORTED_PLATFORMS
