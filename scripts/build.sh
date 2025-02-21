@@ -1,11 +1,19 @@
 #!/bin/bash
+# Usage: ./scripts/build.sh [<PRIVATE_KEY_PATH>] [<DEVICE_IP>]
+# If PRIVATE_KEY_PATH and DEVICE_IP are provided, the zip file will be uploaded to the device with scp
 
 APPLICATION_DIR=mnt/mmc/MUOS/application
 GLYPH_DIR=opt/muos/default/MUOS/theme/active/glyph/muxapp
 FONTS_FIR=usr/share/fonts/romm
 ZIP_BASE_NAME=romm_muOS_install
 VERSION=$(grep -oP '(?<=version = ")[^"]*' .romm/__version__.py)
-echo "Extracted version: $VERSION"
+# If version not set, use branch name
+if [ "$VERSION" == "<version>" ]; then
+  VERSION=$(git rev-parse --abbrev-ref HEAD)
+fi
+PRIVATE_KEY_PATH=$1
+DEVICE_IP=$2
+
 
 mkdir -p .dist
 mkdir -p ".build/${APPLICATION_DIR}"
@@ -19,7 +27,17 @@ mkdir -p ".build/${FONTS_FIR}"
 cp .romm/fonts/romm.ttf ".build/${FONTS_FIR}"
 
 (cd .build && zip -r "../${ZIP_BASE_NAME}_${VERSION}.zip" *)
-ls -lah  # Debug: Check if ZIP exists in the root
 mv "${ZIP_BASE_NAME}_${VERSION}.zip" ".dist/${ZIP_BASE_NAME}_${VERSION}.zip"
-ls -lah .dist  # Debug: Ensure the file was moved correctly
+
+if [ -z "$PRIVATE_KEY_PATH" ]; then
+    echo "No PRIVATE_KEY_PATH provided, skipping SCP upload"
+    exit 0
+elif [ -z "$DEVICE_IP" ]; then
+    echo "No DEVICE_IP provided, skipping SCP upload"
+    exit 0
+else
+    echo "Uploading to $DEVICE_IP"
+    scp -i "${PRIVATE_KEY_PATH}" ".dist/${ZIP_BASE_NAME}_${VERSION}.zip" root@"${DEVICE_IP}":/mnt/mmc/ARCHIVE
+fi
+
 rm -rf .build
