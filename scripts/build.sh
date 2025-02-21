@@ -28,7 +28,7 @@ cp .romm/fonts/romm.ttf .build/"${FONTS_FIR}"
 
 (cd .build && zip -r "../${ZIP_BASE_NAME}_${VERSION}.zip" *)
 
-mv "${ZIP_BASE_NAME}_${VERSION}.zip" .dist/"${ZIP_BASE_NAME}_${VERSION}.zip"
+mv "${ZIP_BASE_NAME}_${VERSION}.zip" .dist/"${ZIP_BASE_NAME}_${VERSION}.muxzip"
 rm -rf .build
 
 if [ -z "$PRIVATE_KEY_PATH" ]; then
