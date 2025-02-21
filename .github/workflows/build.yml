@@ -28,6 +28,6 @@ jobs:
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          files: .dist/romm_muOS_install_${{ env.version }}.zip
+          files: .dist/romm_muOS_install_${{ env.version }}.muxzip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
