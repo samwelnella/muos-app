@@ -5,7 +5,7 @@ from models import Rom
 
 
 class Filesystem:
-    _instance: Optional["Filesystem"]= None
+    _instance: Optional["Filesystem"] = None
     _sd1_rom_storage_path = "/mnt/mmc/roms"
     _sd2_rom_storage_path = "/mnt/sdcard/roms"
     resources_path = "/mnt/mmc/MUOS/application/.romm/resources"
@@ -72,7 +72,8 @@ class Filesystem:
     def is_rom_in_device(self, rom: Rom) -> bool:
         return os.path.exists(
             os.path.join(
-                self.get_sd_storage_platform_path(rom.platform_slug), rom.fs_name
+                self.get_sd_storage_platform_path(rom.platform_slug),
+                rom.fs_name if not rom.multi else f"{rom.fs_name}.m3u",
             )
         )
 

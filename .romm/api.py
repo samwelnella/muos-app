@@ -2,6 +2,7 @@ import base64
 import json
 import math
 import os
+import zipfile
 from typing import Tuple
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
@@ -329,6 +330,7 @@ class API:
                 fs_extension=rom["fs_extension"],
                 fs_size=self._human_readable_size(rom["fs_size_bytes"]),
                 fs_size_bytes=rom["fs_size_bytes"],
+                multi=rom["multi"],
             )
             for rom in roms
             if rom["platform_slug"] in MUOS_SUPPORTED_PLATFORMS
@@ -361,10 +363,11 @@ class API:
                 self._file_system.get_sd_storage_platform_path(rom.platform_slug),
                 rom.fs_name,
             )
-            url = f"{self.host}/{self._roms_endpoint}/{rom.id}/content/{quote(rom.fs_name)}"
+            url = f"{self.host}/{self._roms_endpoint}/{rom.id}/content/{quote(rom.fs_name)}?hidden_folder=True"
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
             try:
+                print(f"Fetching: {url}")
                 request = Request(url, headers=self._headers)
             except ValueError:
                 self._reset_download_status()
@@ -373,18 +376,15 @@ class API:
                 if request.type not in ("http", "https"):
                     self._reset_download_status()
                     return
-                with urlopen(request) as response, open(  # trunk-ignore(bandit/B310)
-                    dest_path, "wb"
-                ) as out_file:
+                print(f"Downloading {rom.name} to {dest_path}")
+                with urlopen(request) as response, open(dest_path, "wb") as out_file: # trunk-ignore(bandit/B310)
                     self._status.total_downloaded_bytes = 0
                     chunk_size = 1024
-                    print(
-                        f"Can Downloading: {not self._status.abort_download.is_set()}"
-                    )
                     while True:
                         if not self._status.abort_download.is_set():
                             chunk = response.read(chunk_size)
                             if not chunk:
+                                print("Finalized download")
                                 break
                             out_file.write(chunk)
                             self._status.valid_host = True
@@ -392,12 +392,20 @@ class API:
                             self._status.total_downloaded_bytes += len(chunk)
                             self._status.downloaded_percent = (
                                 self._status.total_downloaded_bytes
-                                / self._status.downloading_rom.fs_size_bytes
+                                / (
+                                    self._status.downloading_rom.fs_size_bytes + 1
+                                )  # Add 1 virtual byte to avoid division by zero
                             ) * 100
                         else:
                             self._reset_download_status(True, True)
                             os.remove(dest_path)
                             return
+                if rom.multi:
+                    print("Detected multi file rom. Unzipping...")
+                    with zipfile.ZipFile(dest_path, 'r') as zip_ref:
+                        zip_ref.extractall(os.path.dirname(dest_path))
+                    os.remove(dest_path)
+                    print(f"Unzipped {rom.name} at {os.path.dirname(dest_path)}")
             except HTTPError as e:
                 if e.code == 403:
                     self._reset_download_status(valid_host=True)
