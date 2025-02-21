@@ -71,6 +71,8 @@ class Status:
         self.downloading_rom_position = 0
         self.total_downloaded_bytes = 0
         self.downloaded_percent = 0
+        self.extracting_rom = False
+        self.extracted_percent = 0
 
     def reset_roms_list(self) -> None:
         self.roms = []

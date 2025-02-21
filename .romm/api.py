@@ -349,6 +349,7 @@ class API:
         self._status.valid_host = valid_host
         self._status.valid_credentials = valid_credentials
         self._status.downloading_rom = None
+        self._status.extracting_rom = False
         self._status.multi_selected_roms = []
         self._status.download_queue = []
         self._status.download_rom_ready.set()
@@ -377,7 +378,9 @@ class API:
                     self._reset_download_status()
                     return
                 print(f"Downloading {rom.name} to {dest_path}")
-                with urlopen(request) as response, open(dest_path, "wb") as out_file: # trunk-ignore(bandit/B310)
+                with urlopen(request) as response, open(
+                    dest_path, "wb"
+                ) as out_file:  # trunk-ignore(bandit/B310)
                     self._status.total_downloaded_bytes = 0
                     chunk_size = 1024
                     while True:
@@ -401,11 +404,38 @@ class API:
                             os.remove(dest_path)
                             return
                 if rom.multi:
-                    print("Detected multi file rom. Unzipping...")
-                    with zipfile.ZipFile(dest_path, 'r') as zip_ref:
-                        zip_ref.extractall(os.path.dirname(dest_path))
+                    self._status.extracting_rom = True
+                    print("Multi file rom detected. Extracting...")
+                    with zipfile.ZipFile(dest_path, "r") as zip_ref:
+                        total_size = sum(file.file_size for file in zip_ref.infolist())
+                        extracted_size = 0
+                        chunk_size = 1024
+                        for file in zip_ref.infolist():
+                            if not self._status.abort_download.is_set():
+                                file_path = os.path.join(
+                                    os.path.dirname(dest_path), file.filename
+                                )
+                                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                                with zip_ref.open(file) as source, open(
+                                    file_path, "wb"
+                                ) as target:
+                                    while True:
+                                        chunk = source.read(chunk_size)
+                                        if not chunk:
+                                            break
+                                        target.write(chunk)
+                                        extracted_size += len(chunk)
+                                        self._status.extracted_percent = (
+                                            extracted_size / total_size
+                                        ) * 100
+                            else:
+                                self._reset_download_status(True, True)
+                                os.remove(dest_path)
+                                return
+                    self._status.extracting_rom = False
+                    self._status.downloading_rom = None
                     os.remove(dest_path)
-                    print(f"Unzipped {rom.name} at {os.path.dirname(dest_path)}")
+                    print(f"Extracted {rom.name} at {os.path.dirname(dest_path)}")
             except HTTPError as e:
                 if e.code == 403:
                     self._reset_download_status(valid_host=True)

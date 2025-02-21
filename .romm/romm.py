@@ -5,6 +5,7 @@ import time
 from typing import Any, Tuple
 
 import ui
+from ui import colorYellow
 from __version__ import version
 from api import API
 from filesystem import Filesystem
@@ -53,15 +54,21 @@ class RomM:
                 self.last_spinner_update = current_time
                 self.current_spinner_status = next(glyphs.spinner)
             ui.draw_log(text_line_1=f"{self.current_spinner_status} Fetching platforms")
-        elif (
-            not self.status.download_rom_ready.is_set() and self.status.downloading_rom
-        ):
-            ui.draw_loader(self.status.downloaded_percent)
-            ui.draw_log(
-                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
-                text_line_2=f"({self.status.downloading_rom.fs_name})",
-                background=False,
-            )
+        elif not self.status.download_rom_ready.is_set():
+            if self.status.extracting_rom:
+                ui.draw_loader(self.status.extracted_percent, color=colorYellow)
+                ui.draw_log(
+                    text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.extracted_percent:.2f}% | Extracting {self.status.downloading_rom.name}",
+                    text_line_2=f"({self.status.downloading_rom.fs_name})",
+                    background=False,
+                )
+            elif self.status.downloading_rom:
+                ui.draw_loader(self.status.downloaded_percent)
+                ui.draw_log(
+                    text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
+                    text_line_2=f"({self.status.downloading_rom.fs_name})",
+                    background=False,
+                )
         elif not self.status.valid_host:
             ui.draw_log(
                 text_line_1=f"Error: Can't connect to host {self.api.host}",
@@ -139,15 +146,21 @@ class RomM:
             ui.draw_log(
                 text_line_1=f"{self.current_spinner_status} Fetching collections"
             )
-        elif (
-            not self.status.download_rom_ready.is_set() and self.status.downloading_rom
-        ):
-            ui.draw_loader(self.status.downloaded_percent)
-            ui.draw_log(
-                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
-                text_line_2=f"({self.status.downloading_rom.fs_name})",
-                background=False,
-            )
+        elif not self.status.download_rom_ready.is_set():
+            if self.status.extracting_rom:
+                ui.draw_loader(self.status.extracted_percent, color=colorYellow)
+                ui.draw_log(
+                    text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.extracted_percent:.2f}% | Extracting {self.status.downloading_rom.name}",
+                    text_line_2=f"({self.status.downloading_rom.fs_name})",
+                    background=False,
+                )
+            elif self.status.downloading_rom:
+                ui.draw_loader(self.status.downloaded_percent)
+                ui.draw_log(
+                    text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
+                    text_line_2=f"({self.status.downloading_rom.fs_name})",
+                    background=False,
+                )
         elif not self.status.valid_host:
             ui.draw_log(
                 text_line_1=f"Error: Can't connect to host {self.api.host}",
@@ -253,15 +266,21 @@ class RomM:
                 self.last_spinner_update = current_time
                 self.current_spinner_status = next(glyphs.spinner)
             ui.draw_log(text_line_1=f"{self.current_spinner_status} Fetching roms")
-        elif (
-            not self.status.download_rom_ready.is_set() and self.status.downloading_rom
-        ):
-            ui.draw_loader(self.status.downloaded_percent)
-            ui.draw_log(
-                text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
-                text_line_2=f"({self.status.downloading_rom.fs_name})",
-                background=False,
-            )
+        elif not self.status.download_rom_ready.is_set():
+            if self.status.extracting_rom:
+                ui.draw_loader(self.status.extracted_percent, color=colorYellow)
+                ui.draw_log(
+                    text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.extracted_percent:.2f}% | Extracting {self.status.downloading_rom.name}",
+                    text_line_2=f"({self.status.downloading_rom.fs_name})",
+                    background=False,
+                )
+            elif self.status.downloading_rom:
+                ui.draw_loader(self.status.downloaded_percent)
+                ui.draw_log(
+                    text_line_1=f"{self.status.downloading_rom_position}/{len(self.status.download_queue)} | {self.status.downloaded_percent:.2f}% | {glyphs.download} {self.status.downloading_rom.name}",
+                    text_line_2=f"({self.status.downloading_rom.fs_name})",
+                    background=False,
+                )
         elif not self.status.valid_host:
             ui.draw_log(
                 text_line_1=f"Error: Can't connect to host {self.api.host}",

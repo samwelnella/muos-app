@@ -200,7 +200,7 @@ def draw_log(
         )
 
 
-def draw_loader(percent):
+def draw_loader(percent, color=colorDarkGreen):
     margin = 10
     margin_top = 38
     margin_bottom = 4
@@ -213,7 +213,7 @@ def draw_loader(percent):
             screen_height - margin_bottom,
         ],
         radius,
-        fill=colorDarkGreen,
+        fill=color,
         outline=None,
     )
 
@@ -234,7 +234,7 @@ def draw_header(host, username):
     if status.profile_pic_path:
         profile_pic = Image.open(status.profile_pic_path)
         margin_right_profile_pic = 45
-        margin_top_profile_pic = 3
+        margin_top_profile_pic = 5
         pos_profile_pic = [
             screen_width - margin_right_profile_pic,
             margin_top_profile_pic,
