@@ -19,8 +19,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set version
+        id: meta
         run: |
-          sed -i 's/<version>/${{ steps.meta.outputs.version }}/' .romm/__version__.py
+          VERSION=$(echo "${GITHUB_REF#refs/tags/}")
+          echo "version=$VERSION" > $GITHUB_ENV
+          sed -i 's/<version>/${{ env.version }}/' .romm/__version__.py
 
       - name: Run build script
         run: |
@@ -30,5 +33,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: romm_muOS_install_${{ steps.meta.outputs.version }}.zip
+          name: romm_muOS_install_${{ env.version }}.zip
           path: .dist/
