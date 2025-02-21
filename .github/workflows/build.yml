@@ -1,0 +1,34 @@
+name: Build and Push zip installer
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+*"
+
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set version
+        run: |
+          sed -i 's/<version>/${{ steps.meta.outputs.version }}/' .romm/__version__.py
+
+      - name: Run build script
+        run: |
+          chmod +x scripts/build.sh
+          ./scripts/build.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: romm_muOS_install
+          path: .dist/
