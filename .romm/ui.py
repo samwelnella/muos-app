@@ -1,5 +1,6 @@
 import mmap
 import os
+import time
 from fcntl import ioctl
 
 from filesystem import Filesystem
@@ -254,12 +255,13 @@ def draw_platforms_list(
     end_idx = start_idx + max_n_platforms
     for i, p in enumerate(platforms[start_idx:end_idx]):
         is_selected = i == (platforms_selected_position % max_n_platforms)
+        row_text = (
+            f"{p.display_name} ({p.rom_count})"
+            if len(p.display_name) <= 55
+            else p.display_name[:55] + f"... ({p.rom_count})"
+        )
         row_list(
-            (
-                f"{p.display_name} ({p.rom_count})"
-                if len(p.display_name) <= 55
-                else p.display_name[:55] + f"... ({p.rom_count})"
-            ),
+            row_text,
             (20, 45 + (i * 35)),
             600,
             32,
@@ -277,14 +279,27 @@ def draw_collections_list(
         int(collections_selected_position / max_n_collections) * max_n_collections
     )
     end_idx = start_idx + max_n_collections
+    max_len_text = 60
     for i, c in enumerate(collections[start_idx:end_idx]):
         is_selected = i == (collections_selected_position % max_n_collections)
+        row_text = c.name
+        if len(row_text) > max_len_text:
+            row_text = row_text + " "  # add empty space for the rotation
+        shift_offset = (int(time.time() * 2)) % len(
+            row_text
+        )  # Calculate shift offset based on time
+        row_text = (
+            row_text[shift_offset:] + row_text[:shift_offset]
+            if len(row_text) > max_len_text
+            else row_text
+        )  # Shift text
+        row_text = (
+            f"{row_text} ({c.rom_count})"
+            if len(row_text) <= max_len_text
+            else row_text[:max_len_text] + f" ({c.rom_count})"
+        )
         row_list(
-            (
-                f"{c.name} ({c.rom_count})"
-                if len(c.name) <= 55
-                else c.name[:55] + f"... ({c.rom_count})"
-            ),
+            row_text,
             (20, 45 + (i * 35)),
             600,
             32,
@@ -313,16 +328,31 @@ def draw_roms_list(
     draw_rectangle_r([10, 70, 630, 437], 0, fill=colorGrayD2, outline=None)
     start_idx = int(roms_selected_position / max_n_roms) * max_n_roms
     end_idx = start_idx + max_n_roms
-    max_len_text = 47 - (4 if prepend_platform_slug else 0)
+    max_len_text = 49 - (4 if prepend_platform_slug else 0)
     for i, r in enumerate(roms[start_idx:end_idx]):
         is_selected = i == (roms_selected_position % max_n_roms)
         is_in_device = fs.is_rom_in_device(r)
         sync_flag_text = f"{glyphs.cloud_sync}" if is_in_device else ""
+        row_text = r.name
+        row_text += f" ({','.join(r.languages)})" if r.languages else ""
+        row_text += f" ({','.join(r.regions)})" if r.regions else ""
+        row_text += f" ({','.join(r.revision)})" if r.revision else ""
+        row_text += f" ({','.join(r.tags)})" if r.tags else ""
+        if len(row_text) > max_len_text:
+            row_text = row_text + " "  # add empty space for the rotation
+        shift_offset = (int(time.time() * 2)) % len(
+            row_text
+        )  # Calculate shift offset based on time
         row_text = (
-            f"{r.name} [{r.fs_size[0]}{r.fs_size[1]}] {sync_flag_text}"
-            if len(r.name) <= max_len_text
-            else r.name[:max_len_text]
-            + f"... [{r.fs_size[0]}{r.fs_size[1]}] {sync_flag_text}"
+            row_text[shift_offset:] + row_text[:shift_offset]
+            if len(row_text) > max_len_text
+            else row_text
+        )  # Shift text
+        row_text = (
+            f"{row_text} [{r.fs_size[0]}{r.fs_size[1]}] {sync_flag_text}"
+            if len(row_text) <= max_len_text
+            else row_text[:max_len_text]
+            + f" [{r.fs_size[0]}{r.fs_size[1]}] {sync_flag_text}"
         )
         row_text = f"{glyphs.checkbox_selected if r in multi_selected_roms else glyphs.checkbox} {row_text}"
         row_list(
