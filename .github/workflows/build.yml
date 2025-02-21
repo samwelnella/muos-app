@@ -1,19 +1,15 @@
-name: Build and Push zip installer
+name: Build and upload zip installer to assets
 
 on:
   push:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+*"
 
-permissions: read-all
+permissions: write-all
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: write
-      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,11 +25,9 @@ jobs:
           chmod +x scripts/build.sh
           ./scripts/build.sh
 
-      - name: Debug artifact path
-        run: ls -lah .dist || echo "No files in .dist"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@v2
         with:
-          name: romm_muOS_install_${{ env.version }}.zip
-          path: .dist/romm_muOS_install_${{ env.version }}.zip
+          files: .dist/romm_muOS_install_${{ env.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
